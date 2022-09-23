@@ -3415,3 +3415,4 @@ src/handlers/passport/__pycache__/edit_passport.cpython-310.pyc
 src/handlers/passport/__pycache__/register_passport.cpython-310.pyc
 src/handlers/passport/__pycache__/show_passports.cpython-310.pyc
 src/.env
+src/handlers/party/__pycache__/**
