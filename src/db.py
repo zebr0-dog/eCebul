@@ -1,6 +1,3 @@
-from ctypes import Union
-from optparse import Option
-from typing import Optional, Tuple
 import aiosqlite
 import operator
 from functools import wraps
@@ -40,9 +37,15 @@ async def create_table(*arg, connect: aiosqlite.Connection):
     """)
     await connect.execute("""
         CREATE TABLE IF NOT EXISTS PARTYIES (
-            party_id INT FOREIGN_KEY AUTOINCREMENT,
+            party_id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             owner INT
+        )
+    """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS PARTYIES_MEMBERS (
+            party_id int,
+            member_id int
         )
     """)
     return 0
@@ -59,10 +62,10 @@ async def save_passport(data: dict, connect):
 async def get_passport(id: int, connect: aiosqlite.Connection) -> tuple:
     """Get user profile and return one as tuple"""
     async with connect.execute("""
-        SELECT (
+        SELECT
             name, surname, sex, username,
-            job, balance, info, active 
-        ) FROM CIJA WHERE user_id=?
+            job, balance, info, active
+        FROM CIJA WHERE user_id=?
     """, (id,)) as cursor:
         if (passport := (await cursor.fetchone())):
             name, surname, sex, username, job, balance, info, active = passport
@@ -105,6 +108,7 @@ async def delete_passport(id: int, connect: aiosqlite.Connection) -> int:
 
 @connection
 async def set_admin(id: int, rang: int, chat: int, connect: aiosqlite.Connection) -> int:
+    id, rang, chat = int(id), int(rang), int(chat)
     await connect.execute("""
         INSERT OR REPLACE INTO ADMINS VALUES (?, ?, ?)
     """, (id, rang, chat,))
@@ -113,7 +117,7 @@ async def set_admin(id: int, rang: int, chat: int, connect: aiosqlite.Connection
 @connection
 async def get_admin(id: int, connect: aiosqlite.Connection) -> int:
     async with connect.execute("""
-        SELECT rang, chat FROM ADMINS WHERE user_id=?
+        SELECT rang, chat_id FROM ADMINS WHERE user_id=?
     """, (id,)) as cursor:
         if (res := (await cursor.fetchall())):
             new_res = {}
@@ -127,7 +131,7 @@ async def get_admin(id: int, connect: aiosqlite.Connection) -> int:
 @connection
 async def add_or_take_money(id, sum, operation, connect):
     sum = int(sum)
-    if sum < 0:
+    if sum <= 0:
         return 1
     operators = {
         "+": operator.add,
@@ -139,10 +143,13 @@ async def add_or_take_money(id, sum, operation, connect):
         if (result := (await cursor.fetchone())):
             balance = result[0]
             new_balance = operators[operation](balance, sum)
-            await connect.execute("""
-                UPDATE CIJA SET balance=? WHERE user_id=?
-            """, (new_balance, id))
-            return 0
+            if new_balance >= 0:
+                await connect.execute("""
+                    UPDATE CIJA SET balance=? WHERE user_id=?
+                """, (new_balance, id))
+                return 0
+            else:
+                return 3
         else:
             return 2
 
@@ -154,14 +161,90 @@ async def get_all_partyies(connect):
         res = await cursor.fetchall()
         if res:
             new_res = {}
-            for name, owner in res:
-                new_res[name] = owner
+            for row in res:
+                new_res[row[0]] = row[1]
             return new_res
         else:
             return {}
 
 @connection
-async def get_party(owner: int, connect):
+async def get_party(id: int, connect):
+    party_id = await connect.execute("""
+        SELECT party_id FROM PARTYIES_MEMBERS WHERE member_id=?
+    """, (id,))
+    party_id = await party_id.fetchone()
+    if party_id:
+        party_id = party_id[0]
+        party_db = await connect.execute("""
+            SELECT owner, name, party_id FROM PARTYIES WHERE party_id=?
+        """, (party_id,))
+        if (party := (await party_db.fetchone())):
+            owner, party_name, party_id = party
+            members = await connect.execute("""
+                SELECT member_id FROM PARTYIES_MEMBERS where party_id=?
+            """, (party_id,))
+            members = await members.fetchall()
+            new_members = []
+            for member in members:
+                member = member[0]
+                passport = await get_passport(member)
+                if passport:
+                    name, *bloat = passport
+                    new_members.append(name)
+                else:
+                    continue
+            party = {
+                "name": party_name,
+                "members": new_members,
+                "owner": (owner==id)
+            }
+            return party
+    return 0
+
+@connection
+async def add_member_to_party(member_id: int, owner_id: int, connect):
+    res = await connect.execute("""
+        SELECT party_id FROM PARTYIES WHERE owner=?
+    """, (owner_id,))
+    if (party_id := (await res.fetchone())):
+        party_id = party_id[0]
+        await connect.execute("""
+            INSERT OR REPLACE INTO PARTYIES_MEMBERS VALUES (?, ?)
+        """, (party_id, member_id,))
+        return 0
+    else:
+        return 1
+
+@connection
+async def delete_member_from_party(member_id, connect):
     await connect.execute("""
-        SELECT name, party_id FROM PARTYIES
-    """)
+        DELETE FROM PARTYIES_MEMBERS WHERE member_id=?
+    """, (member_id,))
+    return 0
+
+@connection
+async def save_party(owner, name, first, second, connect):
+    owner, first, second = int(owner), int(first), int(second)
+    await connect.execute("""
+        INSERT INTO PARTYIES (name, owner) VALUES (?, ?)
+    """, (name, owner))
+    party_id = await connect.execute("""
+        SELECT party_id FROM PARTYIES WHERE owner=?
+    """, (owner,))
+    party_id = await party_id.fetchone()
+    party_id = party_id[0]
+    await connect.executemany("""
+        INSERT INTO PARTYIES_MEMBERS (party_id, member_id) VALUES (?, ?)
+    """, (
+            [
+                (
+                    party_id,
+                    first
+                ),
+                (
+                    party_id,
+                    second
+                )
+            ]
+        )
+    )

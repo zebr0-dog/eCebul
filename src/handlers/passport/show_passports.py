@@ -1,3 +1,4 @@
+from pyexpat.errors import messages
 from aiogram.types import Message
 
 import db
@@ -14,6 +15,7 @@ async def show_pass(message: Message):
             username=tag[1::],
             job=job,
             info=info,
+            id=message.from_user.id
         ),
         disable_web_page_preview=True
         )
@@ -34,7 +36,7 @@ async def show_pass_admin(message: Message):
             username=tag[1::],
             job=job,
             info=info,
-            balance=balance
+            id=message.reply_to_message.from_user.id
         ),
         disable_web_page_preview=True
         )

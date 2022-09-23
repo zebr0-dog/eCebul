@@ -5,6 +5,12 @@ from aiogram.types import (
     KeyboardButton
 )
 
+from aiogram.utils.callback_data import CallbackData
+
+captcha_cb = CallbackData("cap", "answer")
+party_select = CallbackData("sel", "act")
+party = CallbackData("par", "act")
+
 start_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
@@ -112,6 +118,37 @@ change_info = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+def dicise_party(owner: int):
+    dis = InlineKeyboardMarkup(row_width=2)
+    dis.insert(InlineKeyboardButton(
+        "Прийняти",
+        callback_data=party_select.new(
+            act="yes_"+str(owner)
+        ))
+    )
+    dis.insert(InlineKeyboardButton(
+        "Відхилити",
+        callback_data=party_select.new(
+            "no_"+str(owner)
+        ))
+    )
+    return dis
+
+def party_manage_keyboard(is_owner: bool):
+    if is_owner:
+        party_manage = InlineKeyboardMarkup(row_width=1)
+        party_manage.add(InlineKeyboardButton(
+            "Додати учасника",
+            callback_data=party.new(act="add")
+        ))
+        party_manage.add(InlineKeyboardButton(
+            "Видалити учасника",
+            callback_data=party.new(act="delete")
+        ))
+        return party_manage
+    else:
+        return
+
 def change_kb_gen(lor: int):
     change_kb = ...
     if lor == 5:
@@ -176,11 +213,21 @@ def change_kb_gen(lor: int):
         )
     return change_kb
 
-def gen_captcha_keyboard(correct):
+def gen_captcha_keyboard(correct, user_id):
     captcha = InlineKeyboardMarkup(row_width=1)
     for i in range(1, 5):
         if i != correct:
-            captcha.add(InlineKeyboardButton("Слава Цибулі", callback_data="wrong"))
+            captcha.add(InlineKeyboardButton(
+                "Слава Цибулі",
+                callback_data=captcha_cb.new(
+                    answer="wrong_"+str(user_id)
+                ))
+            )
         else:
-            captcha.add(InlineKeyboardButton("Слава Цибулі", callback_data="correct"))
+            captcha.add(InlineKeyboardButton(
+                "Слава Цибулі",
+                callback_data=captcha_cb.new(
+                    answer="correct_"+str(user_id)
+                ))
+            )
     return captcha

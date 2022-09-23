@@ -32,5 +32,11 @@ class RegisterParty(StatesGroup):
 class CreateParty(StatesGroup):
     id = State()
     name = State()
-    tag_1 = State()
-    tag_2 = State()
+    id_1 = State()
+    id_2 = State()
+
+class AddMember(StatesGroup):
+    id = State()
+
+class DeleteMember(StatesGroup):
+    id = State()

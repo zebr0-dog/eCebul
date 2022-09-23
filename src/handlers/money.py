@@ -52,14 +52,14 @@ async def get_sum(msg: Message, state: FSMContext):
 async def pay_by_reply(msg: Message):
     cmd, sum, *a = msg.text.split(" ", 1)
     res = await db.add_or_take_money(
-        id=msg.reply_to_message.from_user.id,
+        id=msg.from_user.id,
         sum=sum,
-        operation="+"
+        operation="-"
     )
     if res == 0:
         await db.add_or_take_money(
-            id=msg.from_user.id,
+            id=msg.reply_to_message.from_user.id,
             sum=sum,
-            operation="-"
+            operation="+"
         )
         await msg.reply("Перевод виконано")

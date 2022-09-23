@@ -21,8 +21,11 @@ class levelOfRight(BoundFilter):
     async def check(self, message: Message) -> bool:
         data = await db.get_admin(message.from_user.id)
         if data:
-            rang = data.get(message.chat.id)
-            if rang >= self.level_of_right:
-                if rang >= 3:
-                    return {"lor": rang}
+            max_value = max(data.values())
+            rang = ...
+            if max_value >= 3:
+                rang = max_value
+            elif max_value <= 2:
+                rang = int(data.get(message.chat.id))
+            return {"lor": rang}
         return False

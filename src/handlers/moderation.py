@@ -10,22 +10,23 @@ import db
 import buttons
 
 async def new_member(message: Message):
-    await bot.restrict_chat_member(
-        message.chat.id,
-        message.from_user.id,
-        ChatPermissions(False),
-        until_date=datetime.timedelta(seconds=20)
-    )
-    correct = random.randint(1,4)
-    await message.reply(
-        texts.WELCOME_CHAT_MESSAGE.format(
-        chat=message.chat.title,
-        id=message.from_user.id,
-        name=message.from_user.full_name,
-        number=correct
-    ),
-        reply_markup=buttons.gen_captcha_keyboard(correct)
-    )
+    for user in message.new_chat_members:
+        await bot.restrict_chat_member(
+            message.chat.id,
+            user.id,
+            ChatPermissions(False),
+            until_date=datetime.timedelta(seconds=20)
+        )
+        correct = random.randint(1,4)
+        await message.reply(
+            texts.WELCOME_CHAT_MESSAGE.format(
+            chat=message.chat.title,
+            id=user.id,
+            name=user.full_name,
+            number=correct
+        ),
+        reply_markup=buttons.gen_captcha_keyboard(correct, user.id)
+        )
 
 async def mute(message: Message):
     cmd, mute_time, mute_type, *comment = message.text.split(" ", 3)
@@ -115,16 +116,18 @@ async def set_admin(message: Message):
 
 async def check(cb: CallbackQuery):
     await cb.answer()
-    data = cb.data
-    if data != "correct":
-        await bot.unban_chat_member(
-            cb.message.chat.id,
-            cb.from_user.id
-        )
-    else:
-        await bot.restrict_chat_member(
-            cb.message.chat.id,
-            cb.from_user.id,
-            ChatPermissions(True, True, True, True)
-        )
-    await cb.message.delete()
+    data = cb.data.split("_")
+    print(data)
+    if cb.from_user.id == int(data[1]):
+        if data[0] != "correct":
+            await bot.unban_chat_member(
+                cb.message.chat.id,
+                cb.from_user.id
+            )
+        else:
+            await bot.restrict_chat_member(
+                cb.message.chat.id,
+                cb.from_user.id,
+                ChatPermissions(True, True, True, True)
+            )
+        await cb.message.delete()

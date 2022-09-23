@@ -22,6 +22,7 @@ if __name__ == "__main__":
     import custom_filters
     import states
     from db import create_table
+    from buttons import party, party_select, captcha_cb
 
     # bound filter
 
@@ -55,6 +56,27 @@ if __name__ == "__main__":
         commands_prefix="!"
     )
     dp.register_message_handler(
+        handlers.party.show_partyies.show_partyies,
+        commands="партії",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.party.edit_partyies.party_profile,
+        chat_type="private",
+        commands="партія",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.party.create_party.reg_party,
+        chat_type="private",
+        commands="створити",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.party.create_party.registration,
+        state=states.RegisterParty.party_application
+    )
+    dp.register_message_handler(
         handlers.money.pay_by_reply,
         is_reply=True,
         commands="перевести",
@@ -62,9 +84,9 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.money.pay_by_id,
+        chat_type="private",
         commands="перевести",
         commands_prefix="!",
-        chat_type="private"
     )
     dp.register_message_handler(
         handlers.money.get_id,
@@ -83,8 +105,48 @@ if __name__ == "__main__":
         commands="баланс",
         commands_prefix="!"
     )
+    dp.register_message_handler(
+        handlers.party.edit_partyies.get_id_for_add,
+        chat_type="private",
+        state=states.AddMember.id
+    )
+    dp.register_message_handler(
+        handlers.party.edit_partyies.get_id_for_delete,
+        chat_type="private",
+        state=states.DeleteMember.id
+    )
     dp.register_callback_query_handler(
-        handlers.moderation.check
+        handlers.moderation.check,
+        captcha_cb.filter(),
+        chat_type="private",
+    )
+    dp.register_callback_query_handler(
+        handlers.party.edit_partyies.yes,
+        party_select.filter(),
+        lambda cb: "yes" in cb.data,
+        chat_type="private",
+    )
+    dp.register_callback_query_handler(
+        handlers.party.edit_partyies.no,
+        party_select.filter(),
+        lambda cb: "no" in cb.data,
+        chat_type="private",
+    )
+    # dp.register_callback_query_handler(
+    #     handlers.party.edit_partyies.yes,
+    #     party_select.filter(),
+    #     lambda cb: "yes" in cb.data,
+    #     chat_type="private",
+    # )
+    dp.register_callback_query_handler(
+        handlers.party.edit_partyies.add_member,
+        party.filter(act="add"),
+        chat_type="private",
+    )
+    dp.register_callback_query_handler(
+        handlers.party.edit_partyies.delete_member,
+        party.filter(act="delete"),
+        chat_type="private",
     )
     # adm
     dp.register_message_handler(
@@ -217,7 +279,7 @@ if __name__ == "__main__":
     dp.register_message_handler(
         handlers.moderation.set_admin,
         is_reply=True,
-        level_of_right=3,
+        level_of_right=5,
         commands="назначити",
         commands_prefix="!",
     )
@@ -228,5 +290,27 @@ if __name__ == "__main__":
         commands=["мут", "mute"],
         commands_prefix='!'
     )
-
+    dp.register_message_handler(
+        handlers.party.create_party.create_party_start,
+        level_of_right=3,
+        commands="зареєструвати",
+        commands_prefix="!",
+        chat_type="private",
+    )
+    dp.register_message_handler(
+        handlers.party.create_party.get_id,
+        state=states.CreateParty.id
+    )
+    dp.register_message_handler(
+        handlers.party.create_party.get_name,
+        state=states.CreateParty.name
+    )
+    dp.register_message_handler(
+        handlers.party.create_party.get_first_tag,
+        state=states.CreateParty.id_1
+    )
+    dp.register_message_handler(
+        handlers.party.create_party.get_second_tag,
+        state=states.CreateParty.id_2
+    )
     executor.start_polling(dp, skip_updates=True, on_startup=create_table)
