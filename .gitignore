@@ -3416,3 +3416,7 @@ src/handlers/passport/__pycache__/register_passport.cpython-310.pyc
 src/handlers/passport/__pycache__/show_passports.cpython-310.pyc
 src/.env
 src/handlers/party/__pycache__/**
+src/handlers/party/__pycache__/edit_partyies.cpython-310.pyc
+src/handlers/party/__pycache__/show_partyies.cpython-310.pyc
+src/handlers/party/__pycache__/edit_partyies.cpython-310.pyc
+src/handlers/party/__pycache__/__init__.cpython-310.pyc

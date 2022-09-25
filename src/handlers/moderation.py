@@ -117,9 +117,8 @@ async def set_admin(message: Message):
 async def check(cb: CallbackQuery):
     await cb.answer()
     data = cb.data.split("_")
-    print(data)
     if cb.from_user.id == int(data[1]):
-        if data[0] != "correct":
+        if data[0] != "cap:correct":
             await bot.unban_chat_member(
                 cb.message.chat.id,
                 cb.from_user.id

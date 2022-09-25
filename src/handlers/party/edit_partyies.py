@@ -1,3 +1,4 @@
+from curses.ascii import isdigit
 from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher import FSMContext
 
@@ -19,14 +20,17 @@ async def party_profile(msg: Message):
         await msg.answer("Ви не є учасником партії")
 
 async def get_id_for_add(msg: Message, state: FSMContext):
-    party = await db.get_party(msg.from_user.id)
-    party_name = party["name"]
-    await msg.answer("Користувачу надіслано запрошення")
-    await bot.send_message(
-        int(msg.text),
-        f"Вас запросили до партії {party_name}. Будьте уважні, приймаючі запрошення — якщо Ви вже в партії то будете видалені з неї",
-        reply_markup=buttons.dicise_party(msg.from_user.id)
-    )
+    if msg.text.isdigit():
+        party = await db.get_party(msg.from_user.id)
+        party_name = party["name"]
+        await msg.answer("Користувачу надіслано запрошення")
+        await bot.send_message(
+            int(msg.text),
+            f"Вас запросили до партії {party_name}. Будьте уважні, приймаючі запрошення — якщо Ви вже в партії то будете видалені з неї",
+            reply_markup=buttons.dicise_party(msg.from_user.id)
+        )
+    else:
+        await msg.answe("Ви ввели некоректний ID")
     await state.finish()
 
 async def get_id_for_delete(msg: Message, state: FSMContext):
@@ -44,6 +48,7 @@ async def yes(cb: CallbackQuery):
     owner = cb.data.split("_")[1]
     await db.add_member_to_party(cb.from_user.id, int(owner))
     await cb.message.answer("Ви вступили в партію")
+    await cb.message.delete()
 
 async def no(cb: CallbackQuery):
     await cb.answer()

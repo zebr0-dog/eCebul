@@ -107,6 +107,14 @@ BANK_ACCOUNT = """
 💰 Баланс: {balance} чорних злотих
 """
 
+PARTYIES = {
+    1: """
+📄 {name}
+👑 <a href="t.me/{username}">{owner}</a>
+👤 Учасників: {members_count}
+"""
+}
+
 PASSPORT_DO_NOT_EXIST = "<b>Помилка. Паспорт не знайдено</b>"
 
 CHANGE_PASSPORT = "<b>Що саме ви хочете змінити?</b>"

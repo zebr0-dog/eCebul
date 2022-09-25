@@ -79,7 +79,8 @@ async def check_is_user_exist(id: int, connect: aiosqlite.Connection) -> bool:
     async with connect.execute("""
         SELECT user_id FROM CIJA WHERE user_id=(?)
     """, (id,)) as cursor:
-        return bool(cursor)
+        exist = await cursor.fetchone()
+        return bool(exist)
 
 @connection
 async def update_data(column: str, id: int, data: str, connect: aiosqlite.Connection):
@@ -133,36 +134,51 @@ async def add_or_take_money(id, sum, operation, connect):
     sum = int(sum)
     if sum <= 0:
         return 1
-    operators = {
-        "+": operator.add,
-        "-": operator.sub,
-    }
-    async with connect.execute("""
-        SELECT balance FROM CIJA where user_id=?
-    """, (id,)) as cursor:
-        if (result := (await cursor.fetchone())):
-            balance = result[0]
-            new_balance = operators[operation](balance, sum)
-            if new_balance >= 0:
-                await connect.execute("""
-                    UPDATE CIJA SET balance=? WHERE user_id=?
-                """, (new_balance, id))
-                return 0
+    exist = await check_is_user_exist(id)
+    if exist:
+        operators = {
+            "+": operator.add,
+            "-": operator.sub,
+        }
+        async with connect.execute("""
+            SELECT balance FROM CIJA where user_id=?
+        """, (id,)) as cursor:
+            if (result := (await cursor.fetchone())):
+                balance = result[0]
+                new_balance = operators[operation](balance, sum)
+                if new_balance >= 0:
+                    await connect.execute("""
+                        UPDATE CIJA SET balance=? WHERE user_id=?
+                    """, (new_balance, id))
+                    return 0
+                else:
+                    return 3
             else:
-                return 3
-        else:
-            return 2
+                return 2
+    else:
+        return 4
 
 @connection
 async def get_all_partyies(connect):
     async with connect.execute("""
-        SELECT name, owner FROM PARTYIES
+        SELECT party_id, name, owner FROM PARTYIES
     """) as cursor:
-        res = await cursor.fetchall()
-        if res:
+        if (res := (await cursor.fetchall())):
             new_res = {}
             for row in res:
-                new_res[row[0]] = row[1]
+                async with connect.execute("""
+                    SELECT member_id FROM PARTYIES_MEMBERS WHERE party_id=?
+                """, (row[0],)) as cursor2:
+                    _count = len(list((await cursor2.fetchall())))
+                    _owner = await get_passport(row[2])
+                    owner_name, owner_username = _owner[0], _owner[3]
+                    new_res[row[1]] = {
+                        "owner": {
+                            "name": owner_name,
+                            "username": owner_username
+                        },
+                        "members_count": _count
+                    }
             return new_res
         else:
             return {}
@@ -244,6 +260,10 @@ async def save_party(owner, name, first, second, connect):
                 (
                     party_id,
                     second
+                ),
+                (
+                    party_id,
+                    owner
                 )
             ]
         )

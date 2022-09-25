@@ -32,6 +32,13 @@ if __name__ == "__main__":
     # registration of handlers
     
     dp.register_message_handler(
+        handlers.passport.register_passport.cancel_giving,
+        commands="скасувати",
+        commands_prefix="!",
+        state="*",
+        chat_type="private"
+    )
+    dp.register_message_handler(
         handlers.passport.show_passports.show_pass,
         is_passport_exist=True,
         commands="start",
@@ -117,8 +124,7 @@ if __name__ == "__main__":
     )
     dp.register_callback_query_handler(
         handlers.moderation.check,
-        captcha_cb.filter(),
-        chat_type="private",
+        captcha_cb.filter()
     )
     dp.register_callback_query_handler(
         handlers.party.edit_partyies.yes,
@@ -162,14 +168,6 @@ if __name__ == "__main__":
         commands="видати",
         commands_prefix="!",
         state=None,
-        chat_type="private"
-    )
-    dp.register_message_handler(
-        handlers.passport.register_passport.cancel_giving,
-        level_of_right=3,
-        commands="скасувати",
-        commands_prefix="!",
-        state=["*"],
         chat_type="private"
     )
     dp.register_message_handler(
