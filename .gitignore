@@ -1,3 +1,5 @@
+.env
+
 lib/python3.10/site-packages/distutils-precedence.pth
 lib/python3.10/site-packages/typing_extensions.py
 lib/python3.10/site-packages/Babel-2.9.1.dist-info/entry_points.txt
@@ -3420,3 +3422,4 @@ src/handlers/party/__pycache__/edit_partyies.cpython-310.pyc
 src/handlers/party/__pycache__/show_partyies.cpython-310.pyc
 src/handlers/party/__pycache__/edit_partyies.cpython-310.pyc
 src/handlers/party/__pycache__/__init__.cpython-310.pyc
+.env
