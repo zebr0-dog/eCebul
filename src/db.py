@@ -1,3 +1,5 @@
+from re import S
+from typing import Dict, Union
 import aiosqlite
 import operator
 from functools import wraps
@@ -46,6 +48,24 @@ async def create_table(*arg, connect: aiosqlite.Connection):
         CREATE TABLE IF NOT EXISTS PARTYIES_MEMBERS (
             party_id int,
             member_id int
+        )
+    """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS CANDIDATS (
+            id int,
+            program text,
+            votes int
+        )
+    """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS VOTED (
+            id int,
+            vote_for int
+        )
+    """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS STATUS_OF_VOTE (
+            status int
         )
     """)
     return 0
@@ -212,7 +232,7 @@ async def get_party(id: int, connect):
             party = {
                 "name": party_name,
                 "members": new_members,
-                "owner": (owner==id)
+                "owner": (owner==id),
             }
             return party
     return 0
@@ -242,7 +262,7 @@ async def delete_member_from_party(member_id, connect):
 async def save_party(owner, name, first, second, connect):
     owner, first, second = int(owner), int(first), int(second)
     await connect.execute("""
-        INSERT INTO PARTYIES (name, owner) VALUES (?, ?)
+        INSERT OR REPLACE INTO PARTYIES (name, owner) VALUES (?, ?)
     """, (name, owner))
     party_id = await connect.execute("""
         SELECT party_id FROM PARTYIES WHERE owner=?
@@ -250,7 +270,7 @@ async def save_party(owner, name, first, second, connect):
     party_id = await party_id.fetchone()
     party_id = party_id[0]
     await connect.executemany("""
-        INSERT INTO PARTYIES_MEMBERS (party_id, member_id) VALUES (?, ?)
+        INSERT OR REPLACE INTO PARTYIES_MEMBERS (party_id, member_id) VALUES (?, ?)
     """, (
             [
                 (
@@ -268,3 +288,139 @@ async def save_party(owner, name, first, second, connect):
             ]
         )
     )
+
+@connection
+async def save_candidate(id, program, connect):
+    status = await connect.execute("""
+        SELECT status FROM STATUS_OF_VOTE
+    """)
+    status = (await status.fetchone())[0]
+    if status == 2:
+        votes = await connect.execute("""
+            SELECT votes FROM CANDIDATS WHERE id=?
+        """, (id,))
+        votes = await votes.fetchone()
+        if votes:
+            votes = votes[0]
+        else:
+            votes = 0
+        await connect.execute("""
+            INSERT OR REPLACE INTO CANDIDATS VALUES (?, ?, ?)
+        """, (id, program, votes))
+        return 0
+    else:
+        return 1
+
+@connection
+async def get_all_candidats(connect):
+    status = await connect.execute("""
+        SELECT status FROM STATUS_OF_VOTE
+    """)
+    status = (await status.fetchone())[0]
+    if status == 3:
+        async with connect.execute("""
+            SELECT id, votes FROM CANDIDATS
+        """) as cursor:
+            candidates = {}
+            candidates_from_db = await cursor.fetchall()
+            for row in candidates_from_db:
+                id, votes = row
+                name, surname, *bloat = await get_passport(id)
+                candidates[id] = {
+                    "id": id,
+                    "name": name,
+                    "surname": surname,
+                    "votes": votes
+                }
+            return candidates
+    else:
+        return 1
+
+@connection
+async def get_candidate(id: int, connect) -> Dict[str, Union[str, int]]:
+    status = await connect.execute("""
+        SELECT status FROM STATUS_OF_VOTE
+    """)
+    status = (await status.fetchone())[0]
+    if status == 3:
+        async with connect.execute("""
+            SELECT id, program, votes FROM CANDIDATS WHERE id=?
+        """, (id,)) as cursor:
+            candidate_db = await cursor.fetchone()
+            if candidate_db:
+                id, program, votes = candidate_db
+                name, surname, sex, username, *bloat = await get_passport(id)
+                party = await get_party(id)
+                if not party:
+                    party = {}
+                candidate = {
+                    "id": id,
+                    "name": name,
+                    "surname": surname,
+                    "username": username[1::],
+                    "party": party.get("name"),
+                    "program": program,
+                    "votes": votes
+                }
+                return candidate
+            else:
+                return 0
+    else:
+        return 1
+
+@connection
+async def vote(id: int, voter_id: int, connect):
+    status = await connect.execute("""
+        SELECT status FROM STATUS_OF_VOTE
+    """)
+    status = (await status.fetchone())[0]
+    if status == 3:
+        async with connect.execute("""
+            SELECT id FROM VOTED WHERE id=?
+        """, (voter_id,)) as cursor2:
+            was_voted = await cursor2.fetchone()
+            if not was_voted:
+                candidate = await get_candidate(id)
+                if type(candidate) == dict and "votes" in candidate:
+                    votes = candidate["votes"]
+                    votes += 1
+                    await connect.execute("""
+                        DELETE FROM CANDIDATS WHERE id=?
+                    """, (id,))
+                    await connect.execute("""
+                        INSERT INTO CANDIDATS VALUES (?, ?, ?)
+                    """, (id, candidate["program"], votes))
+                    await connect.execute("""
+                        INSERT INTO VOTED VALUES (?, ?)
+                    """, (voter_id, id))
+                    return 0
+                else:
+                    return 1
+            else:
+                return 2
+    else:
+        return 3
+
+@connection
+async def change_status_of_vote(status, connect):
+    # 1 - voting is'nt running
+    # 2 - register of candidats is running
+    # 3 - voting is running
+    await connect.execute("""
+        DELETE FROM STATUS_OF_VOTE
+    """)
+    await connect.execute("""
+        INSERT INTO STATUS_OF_VOTE VALUES (?)
+    """, (status,))
+    if status == 1:
+        candidats = await get_all_candidats()
+        if not candidats:
+            candidats = {}
+        await connect.execute("""
+            DELETE FROM VOTED
+        """)
+        await connect.execute("""
+            DELETE FROM CANDIDATS
+        """)
+        return candidats
+    return 0

@@ -40,3 +40,6 @@ class AddMember(StatesGroup):
 
 class DeleteMember(StatesGroup):
     id = State()
+
+class RegCandidate(StatesGroup):
+    program = State()

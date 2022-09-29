@@ -10,6 +10,8 @@ from aiogram.utils.callback_data import CallbackData
 captcha_cb = CallbackData("cap", "answer")
 party_select = CallbackData("sel", "act")
 party = CallbackData("par", "act")
+candidates_cb = CallbackData("can", "id")
+vote_cb = CallbackData("vote", "id")
 
 start_menu = ReplyKeyboardMarkup(
     keyboard=[
@@ -231,3 +233,24 @@ def gen_captcha_keyboard(correct, user_id):
                 ))
             )
     return captcha
+
+def candidates_keyboard(candidats: dict):
+    keyb = InlineKeyboardMarkup(row_width=1)
+    for candidat in candidats:
+        keyb.add(InlineKeyboardButton(
+            "".join(
+                [
+                    candidats[candidat]["name"],
+                    " ",
+                    candidats[candidat]["surname"]
+                ]
+            ),
+            callback_data=candidates_cb.new(id=str(candidats[candidat]["id"]))
+        ))
+    return keyb
+
+def vote(id: int):
+    id = str(id)
+    keyb = InlineKeyboardMarkup()
+    keyb.add(InlineKeyboardButton("Проголосувати", callback_data=vote_cb.new(id=id)))
+    return keyb

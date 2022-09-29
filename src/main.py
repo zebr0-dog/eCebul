@@ -1,6 +1,5 @@
 import logging
 import os
-from sys import prefix
 import dotenv
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -22,7 +21,7 @@ if __name__ == "__main__":
     import custom_filters
     import states
     from db import create_table
-    from buttons import party, party_select, captcha_cb
+    from buttons import party, party_select, captcha_cb, candidates_cb, vote_cb
 
     # bound filter
 
@@ -96,6 +95,50 @@ if __name__ == "__main__":
         commands_prefix="!",
     )
     dp.register_message_handler(
+        handlers.vote.reg_candidate.start_reg,
+        is_passport_exist=True,
+        chat_type="private",
+        commands="балотуватись",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
+        handlers.vote.reg_candidate.get_program,
+        is_passport_exist=True,
+        chat_type="private",
+        state=states.RegCandidate.program
+    )
+    dp.register_message_handler(
+        handlers.vote.voting.list_of_candidats,
+        is_passport_exist=True,
+        chat_type="private",
+        commands="голосувати",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
+        handlers.vote.admins.start_reg_candidats,
+        is_passport_exist=True,
+        level_of_right=4,
+        chat_type="private",
+        commands="реєстрація",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
+        handlers.vote.admins.start_voting,
+        is_passport_exist=True,
+        level_of_right=4,
+        chat_type="private",
+        commands="голосування",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
+        handlers.vote.admins.final_voting,
+        is_passport_exist=True,
+        level_of_right=4,
+        chat_type="private",
+        commands="фінал",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
         handlers.money.get_id,
         state=states.Pay.id
     )
@@ -138,12 +181,16 @@ if __name__ == "__main__":
         lambda cb: "no" in cb.data,
         chat_type="private",
     )
-    # dp.register_callback_query_handler(
-    #     handlers.party.edit_partyies.yes,
-    #     party_select.filter(),
-    #     lambda cb: "yes" in cb.data,
-    #     chat_type="private",
-    # )
+    dp.register_callback_query_handler(
+        handlers.vote.voting.get_candidat_info,
+        candidates_cb.filter(),
+        chat_type="private",
+    )
+    dp.register_callback_query_handler(
+        handlers.vote.voting.vote,
+        vote_cb.filter(),
+        chat_type="private",
+    )
     dp.register_callback_query_handler(
         handlers.party.edit_partyies.add_member,
         party.filter(act="add"),
