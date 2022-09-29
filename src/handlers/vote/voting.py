@@ -1,6 +1,7 @@
 from aiogram.types import Message, CallbackQuery
 
 import db
+import texts
 import buttons
 
 async def list_of_candidats(msg: Message):
@@ -21,17 +22,15 @@ async def get_candidat_info(cb: CallbackQuery):
         await cb.message.delete()
         if candidat["party"] == None:
             candidat["party"] = "Позапартійний"
-        await cb.message.answer("".join([
-            candidat["name"],
-            " ",
-            candidat["surname"],
-            "\n",
-            candidat["program"],
-            "\n",
-            candidat.get("party", "Позапартійний")
-            ]
-        ),
-        reply_markup=buttons.vote(id)
+        await cb.message.answer(
+            texts.CANDIDAT_PROFILE.format(
+                name=candidat["name"],
+                surname=candidat["surname"],
+                program=candidat["program"],
+                party=candidat["party"],
+                username=candidat["username"]
+            ),
+            reply_markup=buttons.vote(id)
         )
 
 async def vote(cb: CallbackQuery):

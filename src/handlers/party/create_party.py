@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 import db
 import texts
 import states
-from main import bot
+from main import bot, LOG_CHANNEL
 
 async def reg_party(msg: Message):
     await msg.answer(texts.FORM_PARTION_TEXT)
@@ -12,7 +12,7 @@ async def reg_party(msg: Message):
 
 async def registration(msg: Message, state: FSMContext):
     await msg.answer("Вашу заяву буде розглянуто МВС")
-    await bot.send_message(-1001542965657, msg.text)
+    await bot.send_message(LOG_CHANNEL, msg.text)
     await state.finish()
 
 async def create_party_start(msg: Message):

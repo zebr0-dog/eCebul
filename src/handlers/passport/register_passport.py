@@ -6,7 +6,7 @@ import texts
 import db
 import buttons
 import states
-from main import bot
+from main import bot, LOG_CHANNEL
 
 async def start(message: Message):
     await message.answer(
@@ -41,7 +41,7 @@ async def registration(message: Message, state: FSMContext):
     text = message.text
     await state.finish()
     await bot.send_message(
-        -1001542965657,
+        LOG_CHANNEL,
         texts.NEW_REQUEST.format(
             text=text,
             id=user_id,

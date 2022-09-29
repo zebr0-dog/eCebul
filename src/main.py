@@ -8,8 +8,10 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 dotenv.load_dotenv()
 TOKEN = os.getenv("TOKEN")
+MAIN_CHAT = int(os.getenv("MAIN_CHAT"))
+LOG_CHANNEL = int(os.getenv("LOGS"))
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML)
+bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML, disable_web_page_preview=True)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=MemoryStorage())
 
@@ -112,30 +114,6 @@ if __name__ == "__main__":
         is_passport_exist=True,
         chat_type="private",
         commands="голосувати",
-        commands_prefix="!",
-    )
-    dp.register_message_handler(
-        handlers.vote.admins.start_reg_candidats,
-        is_passport_exist=True,
-        level_of_right=4,
-        chat_type="private",
-        commands="реєстрація",
-        commands_prefix="!",
-    )
-    dp.register_message_handler(
-        handlers.vote.admins.start_voting,
-        is_passport_exist=True,
-        level_of_right=4,
-        chat_type="private",
-        commands="голосування",
-        commands_prefix="!",
-    )
-    dp.register_message_handler(
-        handlers.vote.admins.final_voting,
-        is_passport_exist=True,
-        level_of_right=4,
-        chat_type="private",
-        commands="фінал",
         commands_prefix="!",
     )
     dp.register_message_handler(
@@ -357,5 +335,29 @@ if __name__ == "__main__":
     dp.register_message_handler(
         handlers.party.create_party.get_second_tag,
         state=states.CreateParty.id_2
+    )
+    dp.register_message_handler(
+        handlers.vote.admins.start_reg_candidats,
+        is_passport_exist=True,
+        level_of_right=4,
+        chat_type="private",
+        commands="реєстрація",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
+        handlers.vote.admins.start_voting,
+        is_passport_exist=True,
+        level_of_right=4,
+        chat_type="private",
+        commands="голосування",
+        commands_prefix="!",
+    )
+    dp.register_message_handler(
+        handlers.vote.admins.final_voting,
+        is_passport_exist=True,
+        level_of_right=4,
+        chat_type="private",
+        commands="фінал",
+        commands_prefix="!",
     )
     executor.start_polling(dp, skip_updates=True, on_startup=create_table)

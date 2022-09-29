@@ -1,3 +1,4 @@
+from itertools import count
 from re import S
 from typing import Dict, Union
 import aiosqlite
@@ -290,24 +291,45 @@ async def save_party(owner, name, first, second, connect):
     )
 
 @connection
+async def get_count_of_candidats(connect):
+    async with connect.execute("""
+        SELECT id FROM CANDIDATS
+    """) as cursor:
+        res = await cursor.fetchall()
+        if res:
+            return count(res)
+        return 0
+
+@connection
 async def save_candidate(id, program, connect):
     status = await connect.execute("""
         SELECT status FROM STATUS_OF_VOTE
     """)
     status = (await status.fetchone())[0]
     if status == 2:
-        votes = await connect.execute("""
-            SELECT votes FROM CANDIDATS WHERE id=?
-        """, (id,))
-        votes = await votes.fetchone()
-        if votes:
-            votes = votes[0]
+        count_of_candidats = await get_count_of_candidats()
+        if count_of_candidats < 12:
+            info = (await get_passport(id))[6]
+            if info in [
+                "🎗️ Середняк, розуміє головні Державні аспекти!",
+                "🎖️ Ветеран, знається на Державі"
+            ]:
+                votes = await connect.execute("""
+                    SELECT votes FROM CANDIDATS WHERE id=?
+                """, (id,))
+                votes = await votes.fetchone()
+                if votes:
+                    votes = votes[0]
+                else:
+                    votes = 0
+                await connect.execute("""
+                    INSERT OR REPLACE INTO CANDIDATS VALUES (?, ?, ?)
+                """, (id, program, votes))
+                return 0
+            else:
+                return 2
         else:
-            votes = 0
-        await connect.execute("""
-            INSERT OR REPLACE INTO CANDIDATS VALUES (?, ?, ?)
-        """, (id, program, votes))
-        return 0
+            return 3
     else:
         return 1
 
@@ -319,18 +341,19 @@ async def get_all_candidats(connect):
     status = (await status.fetchone())[0]
     if status == 3:
         async with connect.execute("""
-            SELECT id, votes FROM CANDIDATS
-        """) as cursor:
+                SELECT id, votes FROM CANDIDATS
+            """) as cursor:
             candidates = {}
             candidates_from_db = await cursor.fetchall()
             for row in candidates_from_db:
                 id, votes = row
-                name, surname, *bloat = await get_passport(id)
+                name, surname, sex, username, *bloat = await get_passport(id)
                 candidates[id] = {
                     "id": id,
                     "name": name,
                     "surname": surname,
-                    "votes": votes
+                    "votes": votes,
+                    "username": username[1::]
                 }
             return candidates
     else:
@@ -375,29 +398,36 @@ async def vote(id: int, voter_id: int, connect):
     """)
     status = (await status.fetchone())[0]
     if status == 3:
-        async with connect.execute("""
-            SELECT id FROM VOTED WHERE id=?
-        """, (voter_id,)) as cursor2:
-            was_voted = await cursor2.fetchone()
-            if not was_voted:
-                candidate = await get_candidate(id)
-                if type(candidate) == dict and "votes" in candidate:
-                    votes = candidate["votes"]
-                    votes += 1
-                    await connect.execute("""
-                        DELETE FROM CANDIDATS WHERE id=?
-                    """, (id,))
-                    await connect.execute("""
-                        INSERT INTO CANDIDATS VALUES (?, ?, ?)
-                    """, (id, candidate["program"], votes))
-                    await connect.execute("""
-                        INSERT INTO VOTED VALUES (?, ?)
-                    """, (voter_id, id))
-                    return 0
+        info = (await get_passport(voter_id))[6]
+        if info in [
+            "🎗️ Середняк, розуміє головні Державні аспекти!",
+            "🎖️ Ветеран, знається на Державі"
+        ]:
+            async with connect.execute("""
+                SELECT id FROM VOTED WHERE id=?
+            """, (voter_id,)) as cursor2:
+                was_voted = await cursor2.fetchone()
+                if not was_voted:
+                    candidate = await get_candidate(id)
+                    if type(candidate) == dict and "votes" in candidate:
+                        votes = candidate["votes"]
+                        votes += 1
+                        await connect.execute("""
+                            DELETE FROM CANDIDATS WHERE id=?
+                        """, (id,))
+                        await connect.execute("""
+                            INSERT INTO CANDIDATS VALUES (?, ?, ?)
+                        """, (id, candidate["program"], votes))
+                        await connect.execute("""
+                            INSERT INTO VOTED VALUES (?, ?)
+                        """, (voter_id, id))
+                        return 0
+                    else:
+                        return 1
                 else:
-                    return 1
-            else:
-                return 2
+                    return 2
+        else:
+            return 4
     else:
         return 3
 
