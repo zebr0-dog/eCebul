@@ -87,13 +87,13 @@ if __name__ == "__main__":
     dp.register_message_handler(
         handlers.money.pay_by_reply,
         is_reply=True,
-        commands="перевести",
+        commands="переказати",
         commands_prefix="!"
     )
     dp.register_message_handler(
         handlers.money.pay_by_id,
         chat_type="private",
-        commands="перевести",
+        commands="переказати",
         commands_prefix="!",
     )
     dp.register_message_handler(
@@ -185,6 +185,72 @@ if __name__ == "__main__":
         is_reply=True,
         level_of_right=1,
         commands=["документи", "док"],
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.fund.create_fund.create_fund,
+        chat_type="private",
+        level_of_right=3,
+        commands="створити_фонд",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.fund.create_fund.get_fund_owner_id,
+        state=states.CreateFund.fund_owner_id
+    )
+    dp.register_message_handler(
+        handlers.fund.create_fund.get_fund_name,
+        state=states.CreateFund.fund_name
+    )
+    dp.register_message_handler(
+        handlers.fund.create_fund.get_fund_balance,
+        state=states.CreateFund.fund_balance
+    )
+    dp.register_message_handler(
+        handlers.fund.show_funds.get_funds,
+        commands="фонди",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.fund.show_funds.get_fund,
+        commands="фонд",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.fund.fund_managment.add_manager,
+        commands="додати_у_фонд",
+        commands_prefix="!",
+        chat_type="private"
+    )
+    dp.register_message_handler(
+        handlers.fund.fund_managment.delete_manager,
+        commands="видалити_з_фонду",
+        commands_prefix="!",
+        chat_type="private"
+    )
+    dp.register_message_handler(
+        handlers.fund.fund_managment.withdraw_money,
+        level_of_right=3,
+        commands="списати",
+        commands_prefix="!",
+        chat_type="private"
+    )
+    dp.register_message_handler(
+        handlers.fund.fund_managment.take_money,
+        commands="зняти",
+        commands_prefix="!",
+        chat_type="private"
+    )
+    dp.register_message_handler(
+        handlers.fund.fund_managment.replenish_fund,
+        commands="поповнити",
+        commands_prefix="!",
+        chat_type="private"
+    )
+    dp.register_message_handler(
+        handlers.passport.show_passports.find_pass_admin,
+        level_of_right=1,
+        commands="знайти",
         commands_prefix="!"
     )
     dp.register_message_handler(

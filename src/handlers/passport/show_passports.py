@@ -40,3 +40,23 @@ async def show_pass_admin(message: Message):
         ),
         disable_web_page_preview=True
         )
+
+async def find_pass_admin(message: Message):
+    target_username = '@' + str(message.text).split('@')[1]
+    
+    passport = await db.get_passport_from_username(target_username)
+    if passport is None:  
+        await message.answer(texts.PASSPORT_DO_NOT_EXIST)
+    else:
+        name, surname, user_id, sex, job, balance, info, *a = passport
+        await message.answer(texts.PASSPORT.format(
+            name=name,
+            surname=surname,
+            sex=sex,
+            username=target_username,
+            job=job,
+            info=info,
+            id=user_id
+        ),
+        disable_web_page_preview=True
+        )

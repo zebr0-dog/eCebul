@@ -43,3 +43,8 @@ class DeleteMember(StatesGroup):
 
 class RegCandidate(StatesGroup):
     program = State()
+
+class CreateFund(StatesGroup):
+    fund_owner_id = State()
+    fund_name = State()
+    fund_balance = State()

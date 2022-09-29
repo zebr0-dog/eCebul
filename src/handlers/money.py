@@ -6,7 +6,7 @@ import states
 import texts
 import db
 
-from main import bot
+from main import bot, LOG_CHANNEL
 
 async def balance(msg: Message):
     passport = await db.get_passport(msg.from_user.id)
@@ -42,11 +42,12 @@ async def get_sum(msg: Message, state: FSMContext):
             sum=msg.text,
             operation="-"
         )
-        await msg.answer(f"Ви перевели {msg.text} чорних злотих.")
+        await msg.answer(f"Ви переказали {msg.text} чорних злотих.")
         await bot.send_message(
             target,
-            f"Вам перевели {msg.text} чорних злотих."
+            f"Вам переказали {msg.text} чорних злотих."
         )
+        await bot.send_message(LOG_CHANNEL, f'Користувач @{msg.from_user.username} перевів користувачу ID:{target} {msg.text} чорних злотих')
     await state.finish()
 
 async def pay_by_reply(msg: Message):
@@ -62,4 +63,5 @@ async def pay_by_reply(msg: Message):
             sum=sum,
             operation="+"
         )
-        await msg.reply("Перевод виконано")
+        await msg.reply("Переказ виконано")
+        await bot.send_message(LOG_CHANNEL, f'Користувач @{msg.from_user.username} переказав користувачу @{msg.reply_to_message.from_user.username} {sum} чорних злотих')

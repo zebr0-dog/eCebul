@@ -1,1 +1,1 @@
-from . import passport, moderation, money, party, vote
+from . import passport, moderation, money, party, vote, fund

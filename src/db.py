@@ -1,9 +1,11 @@
-from itertools import count
-from re import S
 from typing import Dict, Union
 import aiosqlite
 import operator
 from functools import wraps
+from json import dumps, loads
+from pickletools import read_bytes1
+from sqlite3 import connect
+from types import new_class
 
 def connection(fn):
     @wraps(fn)
@@ -69,6 +71,16 @@ async def create_table(*arg, connect: aiosqlite.Connection):
             status int
         )
     """)
+    #creating fund table
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS FUNDS (
+            fund_id int,
+            fund_owner_id int,
+            fund_balance int,
+            fund_name text,
+            fund_personal text
+        )
+     """)
     return 0
 
 @connection
@@ -78,6 +90,21 @@ async def save_passport(data: dict, connect):
         INSERT INTO CIJA VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
     """, tuple(data.values()))
     return 0
+
+@connection
+async def get_passport_from_username(username: str, connect: aiosqlite.Connection) -> tuple:
+    """Get user profile and return one as tuple"""
+    async with connect.execute("""
+        SELECT
+            name, surname, sex, user_id,
+            job, balance, info, active
+        FROM CIJA WHERE username=?
+     """, (username,)) as cursor:
+        if (passport := (await cursor.fetchone())):
+            name, surname, sex, user_id, job, balance, info, active = passport
+            return name, surname, user_id, sex, job, balance, info, active
+        else:
+            return None
 
 @connection
 async def get_passport(id: int, connect: aiosqlite.Connection) -> tuple:
@@ -167,7 +194,7 @@ async def add_or_take_money(id, sum, operation, connect):
             if (result := (await cursor.fetchone())):
                 balance = result[0]
                 new_balance = operators[operation](balance, sum)
-                if new_balance >= 0:
+                if new_balance == 0:
                     await connect.execute("""
                         UPDATE CIJA SET balance=? WHERE user_id=?
                     """, (new_balance, id))
@@ -297,7 +324,7 @@ async def get_count_of_candidats(connect):
     """) as cursor:
         res = await cursor.fetchall()
         if res:
-            return count(res)
+            return len(res)
         return 0
 
 @connection
@@ -454,3 +481,181 @@ async def change_status_of_vote(status, connect):
         """)
         return candidats
     return 0
+
+@connection
+async def create_fund(owner_id: int, balance: int, name:str, connect):
+    async with connect.execute("""
+        SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS
+    """) as cursor:
+        if (res := (await cursor.fetchall())):
+            res = res
+    """Create fund"""
+    await connect.execute("""
+        INSERT INTO FUNDS VALUES (?, ?, ?, ?, ?)
+    """, (int(len(res)+1), owner_id, balance, name, f"[{owner_id}]"))
+    return 0
+
+@connection
+async def get_all_funds(connect):
+    async with connect.execute("""
+        SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS
+    """) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+
+@connection
+async def get_fund_by_id(fund_id: int, connect):
+    async with connect.execute("""
+        SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS WHERE fund_id=?
+    """, (fund_id, )) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+        
+    
+@connection
+async def add_user_to_fund(fund_id: int, user_id:int, connect):
+    async with connect.execute("""
+        SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS WHERE fund_id=?
+    """, (fund_id, )) as cursor:
+        if (res := (await cursor.fetchall())):
+            for line in res:
+                res = line[4]
+
+    res = loads(res)
+    if int(user_id) not in res:
+        res.append(int(user_id))
+    
+    await connect.execute("""
+            UPDATE FUNDS SET fund_personal=? WHERE fund_id=?
+        """, (dumps(res), fund_id))
+        
+    return True
+
+@connection
+async def delete_user_from_fund(fund_id: int, user_id:int, connect):
+    async with connect.execute("""
+        SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS WHERE fund_id=?
+    """, (fund_id, )) as cursor:
+        if (res := (await cursor.fetchall())):
+            for line in res:
+                res = line[4]
+
+    res = loads(res)
+    if int(res[0]) != int(user_id):
+        res.pop(res.index(int(user_id)))
+    
+        await connect.execute("""
+                UPDATE FUNDS SET fund_personal=? WHERE fund_id=?
+            """, (dumps(res), fund_id))
+            
+        return True
+    else:
+        return False
+
+@connection
+async def withdraw_fund_money(fund_id: int, amount: id, connect):
+    if '-' not in str(amount):
+        async with connect.execute(
+            """
+            SELECT fund_balance, fund_name FROM FUNDS WHERE fund_id=?
+            """, (fund_id,)) as cursor:
+            if (res := (await cursor.fetchall())):
+                fund_balance = int(res[0][0])
+                fund_name = str(res[0][1])
+        
+        amount = int(amount)
+        
+        if fund_id == 1:
+            fund_balance -= amount
+            await connect.execute("""
+                            UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
+                        """, (fund_balance, 1)) 
+            return (0, fund_name)
+        else:
+            fund_balance -= amount
+            async with connect.execute(
+            """
+            SELECT fund_balance FROM FUNDS WHERE fund_id=?
+            """, (1,)) as cursor:
+                if (res := (await cursor.fetchall())):
+                    main_fund_balance = int(res[0][0])
+                    main_fund_balance += amount
+                    await connect.execute("""
+                            UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
+                        """, (main_fund_balance, 1))
+                    
+            await connect.execute("""
+                            UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
+                        """, (fund_balance, fund_id))     
+            
+            return (0, fund_name)
+        
+@connection
+async def replenish_fund_money(fund_id: int, amount: id, user_id: int,  connect):
+    if '-' not in str(amount):
+        async with connect.execute(
+            """
+            SELECT fund_balance, fund_name FROM FUNDS WHERE fund_id=?
+            """, (fund_id,)) as cursor:
+            if (res := (await cursor.fetchall())):
+                fund_balance = int(res[0][0])
+                fund_name = str(res[0][1])
+        amount = int(amount)
+        if int(fund_id) == 1:
+            fund_balance += amount
+            await connect.execute("""
+                            UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
+                        """, (fund_balance, 1)) 
+            return (0, fund_name)
+        else:
+            fund_balance += amount
+            async with connect.execute(
+                """
+                SELECT balance FROM CIJA WHERE user_id=?
+                """, (user_id,)) as cursor:
+                if (res := (await cursor.fetchall())):
+                    new_user_balance = int(res[0][0])
+                    if new_user_balance < amount:
+                        return (1, fund_name)
+                    new_user_balance -= amount
+                    await connect.execute("""
+                            UPDATE CIJA SET balance=? WHERE user_id=?
+                        """, (new_user_balance, user_id))
+                    
+            await connect.execute("""
+                            UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
+                        """, (fund_balance, fund_id))     
+            
+            return (0, fund_name)
+    
+@connection
+async def take_fund_money(fund_id: int, amount: id, user_id: int,  connect):
+    if '-' not in str(amount):
+        async with connect.execute(
+            """
+            SELECT fund_balance, fund_name FROM FUNDS WHERE fund_id=?
+            """, (fund_id,)) as cursor:
+            if (res := (await cursor.fetchall())):
+                fund_balance = int(res[0][0])
+                fund_name = str(res[0][1])
+        amount = int(amount)
+        if fund_balance >= amount:
+            fund_balance -= amount
+            async with connect.execute(
+                """
+                SELECT balance FROM CIJA WHERE user_id=?
+                """, (user_id,)) as cursor:
+                if (res := (await cursor.fetchall())):
+                    new_user_balance = int(res[0][0])
+                    
+                    new_user_balance += amount
+                    
+                    await connect.execute("""
+                                    UPDATE CIJA SET balance=? WHERE user_id=?
+                        """, (new_user_balance, user_id))
+                    
+                    await connect.execute("""
+                                    UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
+                                """, (fund_balance, fund_id))     
+            
+            return (0, fund_name)

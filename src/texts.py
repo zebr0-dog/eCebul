@@ -94,7 +94,7 @@ PASSPORT = """
 🚻 {sex}
 💼 {job}
 🌐 <a href="t.me/{username}">Ідентифікатор</a>
-🆔 ID: {id}
+🆔 ID: Ц{id}Р
 
 {info}
 """
