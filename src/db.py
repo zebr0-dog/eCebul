@@ -1,4 +1,6 @@
+from hashlib import new
 from typing import Dict, Union
+from xmlrpc.client import Boolean
 import aiosqlite
 import operator
 from functools import wraps
@@ -30,7 +32,7 @@ async def create_table(*arg, connect: aiosqlite.Connection):
             balance int,
             info text,
             job text,
-            active bool
+            emoji text DEFAULT '👤'
         )
     """)
     await connect.execute("""
@@ -81,13 +83,60 @@ async def create_table(*arg, connect: aiosqlite.Connection):
             fund_personal text
         )
      """)
+    try:
+        await connect.execute("""
+            SELECT emoji FROM CIJA LIMIT 1
+        """)
+    except:
+        await connect.execute("""
+            ALTER TABLE CIJA ADD COLUMN emoji text DEFAULT '👤'
+        """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS FACTORYS (
+            factory_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            factory_name TEXT,
+            owner_id INT,
+            fund_id INT,
+            factory_positions TEXT,
+            factory_salarys TEXT,
+            factory_personal TEXT
+    )
+    """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS SHOP (
+            shop_id INTEGER PRIMARY KEY NOT NULL,
+            shop_title text NOT NULL,
+            shop_owner_id int NOT NULL,
+            default_message text
+        )
+     """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS ITEM (
+            item_id INTEGER PRIMARY KEY NOT NULL,
+            item_count int NOT NULL,
+            item_name text NOT NULL,
+            description text NOT NULL,
+            shop_id int NOT NULL,
+            cost int,
+            status text
+        )
+     """)
+    await connect.execute("""
+        CREATE TABLE IF NOT EXISTS BOUGHT_ITEM (
+            owner_item_id int NOT NULL,
+            item_id INTEGER NOT NULL,
+            item_name text NOT NULL,
+            description text NOT NULL,
+            status text
+        )
+     """)
     return 0
 
 @connection
 async def save_passport(data: dict, connect):
     """Save profile of user into db"""
     await connect.execute("""
-        INSERT INTO CIJA VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+        INSERT INTO CIJA VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, tuple(data.values()))
     return 0
 
@@ -97,12 +146,12 @@ async def get_passport_from_username(username: str, connect: aiosqlite.Connectio
     async with connect.execute("""
         SELECT
             name, surname, sex, user_id,
-            job, balance, info, active
+            job, balance, info, emoji
         FROM CIJA WHERE username=?
      """, (username,)) as cursor:
         if (passport := (await cursor.fetchone())):
-            name, surname, sex, user_id, job, balance, info, active = passport
-            return name, surname, user_id, sex, job, balance, info, active
+            name, surname, sex, user_id, job, balance, info, emoji = passport
+            return name, surname, user_id, sex, job, balance, info, emoji
         else:
             return None
 
@@ -112,20 +161,31 @@ async def get_passport(id: int, connect: aiosqlite.Connection) -> tuple:
     async with connect.execute("""
         SELECT
             name, surname, sex, username,
-            job, balance, info, active
+            job, balance, info, emoji
         FROM CIJA WHERE user_id=?
     """, (id,)) as cursor:
         if (passport := (await cursor.fetchone())):
-            name, surname, sex, username, job, balance, info, active = passport
-            return name, surname, sex, username, job, balance, info, active
+            name, surname, sex, username, job, balance, info, emoji = passport
+            return name, surname, sex, username, job, balance, info, emoji
         else:
             return None
+
+@connection
+async def get_name(connect, id: int):
+    async with connect.execute("""
+        SELECT
+            name, surname, username
+        FROM CIJA WHERE user_id=?
+    """, (id,)) as cursor:
+        if (res := (await cursor.fetchone())):
+            name, surname, username = res
+        return name, surname, username
 
 @connection
 async def check_is_user_exist(id: int, connect: aiosqlite.Connection) -> bool:
     """Return True if user have paasport and False if not"""
     async with connect.execute("""
-        SELECT user_id FROM CIJA WHERE user_id=(?)
+        SELECT user_id FROM CIJA WHERE user_id=?
     """, (id,)) as cursor:
         exist = await cursor.fetchone()
         return bool(exist)
@@ -142,6 +202,7 @@ async def update_data(column: str, id: int, data: str, connect: aiosqlite.Connec
         "balance": "UPDATE CIJA SET balance=(?) WHERE user_id=(?)",
         "info": "UPDATE CIJA SET info=(?) WHERE user_id=(?)",
         "activity": "UPDATE CIJA SET active=(?) WHERE user_id=(?)",
+        "emoji": "UPDATE CIJA SET emoji=(?) WHERE user_id=(?)"
     }
     query = queryies.get(column, "")
     data = (data, id)
@@ -179,6 +240,7 @@ async def get_admin(id: int, connect: aiosqlite.Connection) -> int:
 
 @connection
 async def add_or_take_money(id, sum, operation, connect):
+    
     sum = int(sum)
     if sum <= 0:
         return 1
@@ -193,11 +255,13 @@ async def add_or_take_money(id, sum, operation, connect):
         """, (id,)) as cursor:
             if (result := (await cursor.fetchone())):
                 balance = result[0]
+                
                 new_balance = operators[operation](balance, sum)
-                if new_balance == 0:
+                if new_balance >= 0:
                     await connect.execute("""
                         UPDATE CIJA SET balance=? WHERE user_id=?
                     """, (new_balance, id))
+
                     return 0
                 else:
                     return 3
@@ -387,6 +451,25 @@ async def get_all_candidats(connect):
         return 1
 
 @connection
+async def get_all_candidates(connect):
+    async with connect.execute("""
+    SELECT id, votes FROM CANDIDATS
+    """) as cursor:
+        candidates = {}
+        candidates_from_db = await cursor.fetchall()
+        for row in candidates_from_db:
+            id, votes = row
+            name, surname, sex, username, *bloat = await get_passport(id)
+            candidates[id] = {
+                "id": id,
+                "name": name,
+                "surname": surname,
+                "votes": votes,
+                "username": username[1::]
+            }
+        return candidates
+
+@connection
 async def get_candidate(id: int, connect) -> Dict[str, Union[str, int]]:
     status = await connect.execute("""
         SELECT status FROM STATUS_OF_VOTE
@@ -509,9 +592,9 @@ async def get_fund_by_id(fund_id: int, connect):
         SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS WHERE fund_id=?
     """, (fund_id, )) as cursor:
         if (res := (await cursor.fetchall())):
-            return res
         
-    
+            return res
+
 @connection
 async def add_user_to_fund(fund_id: int, user_id:int, connect):
     async with connect.execute("""
@@ -539,11 +622,9 @@ async def delete_user_from_fund(fund_id: int, user_id:int, connect):
         if (res := (await cursor.fetchall())):
             for line in res:
                 res = line[4]
-
     res = loads(res)
     if int(res[0]) != int(user_id):
         res.pop(res.index(int(user_id)))
-    
         await connect.execute("""
                 UPDATE FUNDS SET fund_personal=? WHERE fund_id=?
             """, (dumps(res), fund_id))
@@ -551,6 +632,14 @@ async def delete_user_from_fund(fund_id: int, user_id:int, connect):
         return True
     else:
         return False
+    
+@connection
+async def check_user_ownership(user_id: int, connect):
+    async with connect.execute("""
+        SELECT fund_personal FROM FUNDS
+    """) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
 
 @connection
 async def withdraw_fund_money(fund_id: int, amount: id, connect):
@@ -591,8 +680,12 @@ async def withdraw_fund_money(fund_id: int, amount: id, connect):
             return (0, fund_name)
         
 @connection
-async def replenish_fund_money(fund_id: int, amount: id, user_id: int,  connect):
+async def replenish_fund_money(fund_id: int, amount: int, user_id: int, transaction: bool, connect):
     if '-' not in str(amount):
+        
+        if int(amount) <= 0:
+            return
+        
         async with connect.execute(
             """
             SELECT fund_balance, fund_name FROM FUNDS WHERE fund_id=?
@@ -601,7 +694,8 @@ async def replenish_fund_money(fund_id: int, amount: id, user_id: int,  connect)
                 fund_balance = int(res[0][0])
                 fund_name = str(res[0][1])
         amount = int(amount)
-        if int(fund_id) == 1:
+        
+        if not transaction:
             fund_balance += amount
             await connect.execute("""
                             UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
@@ -616,7 +710,7 @@ async def replenish_fund_money(fund_id: int, amount: id, user_id: int,  connect)
                 if (res := (await cursor.fetchall())):
                     new_user_balance = int(res[0][0])
                     if new_user_balance < amount:
-                        return (1, fund_name)
+                        return
                     new_user_balance -= amount
                     await connect.execute("""
                             UPDATE CIJA SET balance=? WHERE user_id=?
@@ -659,3 +753,83 @@ async def take_fund_money(fund_id: int, amount: id, user_id: int,  connect):
                                 """, (fund_balance, fund_id))     
             
             return (0, fund_name)
+        
+@connection
+async def list_shop(connect):
+    async with connect.execute("""
+        SELECT shop_title FROM SHOP ORDER BY shop_id DESC
+    """) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+            
+@connection
+async def my_shop(connect, owner_id: int):
+    async with connect.execute("""
+        SELECT shop_title FROM SHOP WHERE shop_owner_id = ? ORDER BY shop_id DESC
+    """, (owner_id,)) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+            
+@connection
+async def is_my_shop(connect, shop_id: int, sender_id: int):
+    shop = await connect.execute("""
+        SELECT shop_owner_id FROM SHOP WHERE shop_id = ?
+    """, (shop_id,))
+    shop = (await shop.fetchone())[0]
+    if shop == sender_id:
+        return True
+    else:
+        return False
+            
+@connection
+async def list_item(connect, shopid: int):
+    async with connect.execute("""
+        SELECT item_name FROM ITEM WHERE shop_id = ? 
+    """, (shopid,)) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+           
+@connection
+async def id_shop(connect, title: str):
+    async with connect.execute("""
+        SELECT shop_id FROM SHOP WHERE shop_title = ?
+    """, (title,)) as cursor:
+        if (res := (await cursor.fetchone())):
+            return res
+
+@connection
+async def def_msg(connect, title: str):
+    async with connect.execute("""
+        SELECT default_message FROM SHOP WHERE shop_title = ?
+    """, (title,)) as cursor:
+        if (res := (await cursor.fetchone())):
+            return res
+@connection
+async def title_shop(connect, id: int):
+    async with connect.execute("""
+        SELECT shop_title FROM SHOP WHERE shop_id = ? 
+    """, (id,)) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+
+@connection
+async def item(connect, id: int):
+    async with connect.execute("""
+        SELECT item_name, shop_id, cost, status, description FROM ITEM WHERE item_id = ? 
+    """, (id,)) as cursor:
+        if (res := (await cursor.fetchall())):
+            return res
+
+@connection
+async def buy_item(connect, id_item:int, id_buyer:int, name:str, desc:str, status:str):
+    owner_id, items_num = int(owner_id), int(items_num)
+    await connect.execute("""
+        INSERT INTO BOUGHT_ITEM (owner_item_id, item_id) VALUES (?, ?, ?, ?, ?)
+    """, (id_buyer, id_item, name, desc, status))
+    
+async def bought(connect, id_b:int):
+        async with connect.execute("""
+        SELECT item_name, description, status FROM ITEM WHERE owner_item_id = ? ORDER BY item DESC
+    """, (id,)) as cursor:
+            if (res := (await cursor.fetchall())):
+                return res

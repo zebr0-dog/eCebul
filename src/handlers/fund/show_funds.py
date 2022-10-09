@@ -9,7 +9,7 @@ async def get_funds(message: Message):
     list_of_funds = await db.get_all_funds()
     if list_of_funds:
         text = """<b>Фонди 
-Цебулевої Республіки</b>\n"""
+Кавуневої Республіки</b>\n"""
         for fund in list_of_funds:
             user_tag = await db.get_passport(id = int(fund[1]))
             text = text + f'''
@@ -34,7 +34,7 @@ async def get_fund(message: Message):
         
         text = f"""
 <b>Фонд
-Цебулевої Республіки
+Кавуневої Республіки
         """ 
         
         for line in fund: 

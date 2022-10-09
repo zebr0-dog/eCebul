@@ -66,6 +66,7 @@ async def get_new_data(message: Message, state: FSMContext):
             "баланс": "balance",
             "інфо": "info",
             "робота": "job",
+            "емодзі": "emoji"
         }
         await state.finish()
         if (await db.update_data(columns[column], target, new_data)) == 0:

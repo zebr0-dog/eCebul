@@ -3469,3 +3469,4 @@ src/handlers/fund/__pycache__/__init__.cpython-310.pyc
 src/handlers/fund/__pycache__/create_fund.cpython-310.pyc
 src/handlers/fund/__pycache__/fund_managment.cpython-310.pyc
 src/handlers/fund/__pycache__/show_funds.cpython-310.pyc
+.vscode/settings.json

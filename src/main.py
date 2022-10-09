@@ -64,6 +64,22 @@ if __name__ == "__main__":
         commands_prefix="!"
     )
     dp.register_message_handler(
+        handlers.shop.view_shop.shop_view,
+        commands="магазин",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.shop.view_item.my_items,
+        commands="предмети",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.vote.candidates.candidats,
+        level_of_right=3,
+        commands=["slaves", "кандидати"],
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
         handlers.party.show_partyies.show_partyies,
         commands="партії",
         commands_prefix="!"
@@ -178,6 +194,9 @@ if __name__ == "__main__":
         handlers.party.edit_partyies.delete_member,
         party.filter(act="delete"),
         chat_type="private",
+    )
+    dp.register_callback_query_handler(
+        handlers.shop.callbacks.shopes
     )
     # adm
     dp.register_message_handler(
@@ -426,4 +445,7 @@ if __name__ == "__main__":
         commands="фінал",
         commands_prefix="!",
     )
+
+
+
     executor.start_polling(dp, skip_updates=True, on_startup=create_table)

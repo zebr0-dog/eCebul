@@ -1,4 +1,3 @@
-from curses.ascii import isdigit
 from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher import FSMContext
 

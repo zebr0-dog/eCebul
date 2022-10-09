@@ -48,3 +48,17 @@ class CreateFund(StatesGroup):
     fund_owner_id = State()
     fund_name = State()
     fund_balance = State()
+    
+class CreateShop(StatesGroup):
+    shop_owner_id = State()
+    shop_title = State()
+    shop_items_num = State() 
+    default_message = State()
+
+class CreateItem(StatesGroup):
+    shop_id = State()
+    item_name = State()
+    item_count = State()
+    description = State()
+    item_cost = State()
+    item_status = State()

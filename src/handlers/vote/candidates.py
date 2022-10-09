@@ -12,12 +12,3 @@ async def candidats(message: Message):
     else:
         text = "Кандидатів немає\n <em>ХТО ЇХ СПЕР???</em>"
     await message.reply(text)
-   
-   
-   
- #   dp.register_message_handler(
-  #      handlers.vote.candidates.candidats,
-   #     level_of_right=3,
-    #    commands=["slaves", "кандидати"],
-    #   commands_prefix="!"
-    #)  Це додати в main.py

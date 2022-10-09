@@ -177,6 +177,9 @@ def change_kb_gen(lor: int):
                 [
                     KeyboardButton(text="робота")
                 ],
+                [
+                    KeyboardButton(text="емодзі")
+                ],
             ],
             resize_keyboard=True
         )
@@ -201,6 +204,9 @@ def change_kb_gen(lor: int):
                 [
                     KeyboardButton(text="робота")
                 ],
+            [
+                    KeyboardButton(text="емодзі")
+                ],
             ],
             resize_keyboard=True
         )
@@ -220,14 +226,14 @@ def gen_captcha_keyboard(correct, user_id):
     for i in range(1, 5):
         if i != correct:
             captcha.add(InlineKeyboardButton(
-                "Слава Цибулі",
+                "Слава Кавуну",
                 callback_data=captcha_cb.new(
                     answer="wrong_"+str(user_id)
                 ))
             )
         else:
             captcha.add(InlineKeyboardButton(
-                "Слава Цибулі",
+                "Слава Кавуну",
                 callback_data=captcha_cb.new(
                     answer="correct_"+str(user_id)
                 ))

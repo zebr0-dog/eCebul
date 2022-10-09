@@ -6,7 +6,7 @@ import texts
 async def show_partyies(msg: Message):
     list_of_partyies = await db.get_all_partyies()
     if list_of_partyies:
-        text = "<b>Політичні партії\nЦебулевої Республіки\n</b>"
+        text = "<b>Політичні партії\nКавуневої Республіки\n</b>"
         for party in list_of_partyies:
             party_text = texts.PARTYIES[1].format(
                 name=party,
