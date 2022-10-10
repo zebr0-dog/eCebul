@@ -248,6 +248,13 @@ if __name__ == "__main__":
         chat_type="private"
     )
     dp.register_message_handler(
+        handlers.fund.delete_fund.delete_fund,
+        level_of_right=3,
+        commands="видалити_фонд",
+        commands_prefix="!",
+        chat_type="private"
+    )
+    dp.register_message_handler(
         handlers.fund.fund_managment.withdraw_money,
         level_of_right=3,
         commands="списати",

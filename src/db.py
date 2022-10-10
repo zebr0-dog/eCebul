@@ -83,25 +83,6 @@ async def create_table(*arg, connect: aiosqlite.Connection):
             fund_personal text
         )
      """)
-    try:
-        await connect.execute("""
-            SELECT emoji FROM CIJA LIMIT 1
-        """)
-    except:
-        await connect.execute("""
-            ALTER TABLE CIJA ADD COLUMN emoji text DEFAULT '👤'
-        """)
-    await connect.execute("""
-        CREATE TABLE IF NOT EXISTS FACTORYS (
-            factory_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            factory_name TEXT,
-            owner_id INT,
-            fund_id INT,
-            factory_positions TEXT,
-            factory_salarys TEXT,
-            factory_personal TEXT
-    )
-    """)
     await connect.execute("""
         CREATE TABLE IF NOT EXISTS SHOP (
             shop_id INTEGER PRIMARY KEY NOT NULL,
@@ -136,7 +117,10 @@ async def create_table(*arg, connect: aiosqlite.Connection):
 async def save_passport(data: dict, connect):
     """Save profile of user into db"""
     await connect.execute("""
-        INSERT INTO CIJA VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO CIJA (
+            user_id, name, surname, sex,
+            username, balance, info, job
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, tuple(data.values()))
     return 0
 
@@ -579,6 +563,15 @@ async def create_fund(owner_id: int, balance: int, name:str, connect):
     return 0
 
 @connection
+async def delete_fund(fund_id: int, connect):
+    fund_id = int(fund_id)
+    """Delete fund"""
+    await connect.execute("""
+        DELETE FROM FUNDS WHERE fund_id=?
+    """, (fund_id,))
+    return 0
+
+@connection
 async def get_all_funds(connect):
     async with connect.execute("""
         SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS
@@ -588,11 +581,11 @@ async def get_all_funds(connect):
 
 @connection
 async def get_fund_by_id(fund_id: int, connect):
+    fund_id = int(fund_id)
     async with connect.execute("""
         SELECT fund_id, fund_owner_id, fund_balance, fund_name, fund_personal FROM FUNDS WHERE fund_id=?
     """, (fund_id, )) as cursor:
         if (res := (await cursor.fetchall())):
-        
             return res
 
 @connection
@@ -603,11 +596,9 @@ async def add_user_to_fund(fund_id: int, user_id:int, connect):
         if (res := (await cursor.fetchall())):
             for line in res:
                 res = line[4]
-
     res = loads(res)
     if int(user_id) not in res:
         res.append(int(user_id))
-    
     await connect.execute("""
             UPDATE FUNDS SET fund_personal=? WHERE fund_id=?
         """, (dumps(res), fund_id))
@@ -682,10 +673,8 @@ async def withdraw_fund_money(fund_id: int, amount: id, connect):
 @connection
 async def replenish_fund_money(fund_id: int, amount: int, user_id: int, transaction: bool, connect):
     if '-' not in str(amount):
-        
         if int(amount) <= 0:
             return
-        
         async with connect.execute(
             """
             SELECT fund_balance, fund_name FROM FUNDS WHERE fund_id=?
@@ -694,7 +683,6 @@ async def replenish_fund_money(fund_id: int, amount: int, user_id: int, transact
                 fund_balance = int(res[0][0])
                 fund_name = str(res[0][1])
         amount = int(amount)
-        
         if not transaction:
             fund_balance += amount
             await connect.execute("""
@@ -715,11 +703,9 @@ async def replenish_fund_money(fund_id: int, amount: int, user_id: int, transact
                     await connect.execute("""
                             UPDATE CIJA SET balance=? WHERE user_id=?
                         """, (new_user_balance, user_id))
-                    
             await connect.execute("""
                             UPDATE FUNDS SET fund_balance=? WHERE fund_id=?
                         """, (fund_balance, fund_id))     
-            
             return (0, fund_name)
     
 @connection

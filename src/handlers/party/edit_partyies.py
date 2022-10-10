@@ -11,9 +11,9 @@ async def party_profile(msg: Message):
     party = await db.get_party(id=msg.from_user.id)
     if party:
         name, members = party["name"], party["members"]
-        text = name
+        text = "".join(["👥 Учасники партії ", name, "\n"])
         for member in members:
-            text = "\n".join([text, member])
+            text = "".join([text, "\n•", member])
         await msg.answer(text, reply_markup=buttons.party_manage_keyboard(party["owner"]))
     else:
         await msg.answer("Ви не є учасником партії")

@@ -24,9 +24,9 @@ async def pay_by_id(msg: Message):
 
 async def get_id(msg: Message, state: FSMContext):
     await state.update_data(id=msg.text)
-    target = str(msg.text)
+    target = msg.text
     if len(target) >= 2:
-        if target[1] == ':':
+        if ':' in target:
             target = int(target[0])
             res = await db.get_fund_by_id(int(target))
         else:
@@ -42,7 +42,7 @@ async def get_id(msg: Message, state: FSMContext):
 async def get_sum(msg: Message, state: FSMContext):
     data = await state.get_data()
     if not '-' in msg.text:
-        target = str(data.get("id"))
+        target = str(data.get("id"))  
         full_target = target
         if target[0] == 'Ц' and target[-1] == 'Р':       
             target = target[1:]
@@ -66,7 +66,8 @@ async def get_sum(msg: Message, state: FSMContext):
                     f"Громадянин {user_from[0]} {user_from[1]} переказав вам {msg.text} чорних злотих."
                 )
                 await bot.send_message(LOG_CHANNEL, f'Користувач @{msg.from_user.username} перевів користувачу {user_to[3]} {msg.text} чорних злотих')
-        elif target[1] == ':':
+        elif ':' in target:
+            target = target.split(":")
             target = int(target[0])
             fund = await db.get_fund_by_id(target)
             if fund:

@@ -1,9 +1,7 @@
 from aiogram.types import Message
 
 import db
-import texts
 import json
-import custom_filters
 
 async def get_funds(message: Message):
     list_of_funds = await db.get_all_funds()
@@ -24,8 +22,6 @@ async def get_funds(message: Message):
 async def get_fund(message: Message):
     
     command, fund_id, *all = message.text.split()
-    
-    fund_id = fund_id[0]
     
     fund = await db.get_fund_by_id(fund_id=fund_id)
     

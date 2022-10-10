@@ -3470,3 +3470,10 @@ src/handlers/fund/__pycache__/create_fund.cpython-310.pyc
 src/handlers/fund/__pycache__/fund_managment.cpython-310.pyc
 src/handlers/fund/__pycache__/show_funds.cpython-310.pyc
 .vscode/settings.json
+src/handlers/fund/__pycache__/delete_fund.cpython-310.pyc
+src/handlers/shop/__pycache__/__init__.cpython-310.pyc
+src/handlers/shop/__pycache__/buy_item.cpython-310.pyc
+src/handlers/shop/__pycache__/callbacks.cpython-310.pyc
+src/handlers/shop/__pycache__/view_item.cpython-310.pyc
+src/handlers/shop/__pycache__/view_shop.cpython-310.pyc
+src/handlers/vote/__pycache__/candidates.cpython-310.pyc

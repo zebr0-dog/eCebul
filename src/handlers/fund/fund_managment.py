@@ -1,22 +1,18 @@
 from aiogram.types import Message
 
 import db
-import texts
 import json
-import buttons
 
 from main import bot, LOG_CHANNEL
 
 async def check_admin_rank(user_id: int):
     user_data = await db.get_admin(id=user_id)
-    
     max_value = max(user_data.values())
     rang = ...
     if max_value >= 3:
         rang = 3
     else:
         rang = False
-    
     return rang
 
 async def add_manager(message: Message):
