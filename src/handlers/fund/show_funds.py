@@ -22,7 +22,7 @@ async def get_funds(message: Message):
 async def get_fund(message: Message):
     
     command, fund_id, *all = message.text.split()
-    
+    fund_id = fund_id.split(":")[0]
     fund = await db.get_fund_by_id(fund_id=fund_id)
     
     if fund:
@@ -30,7 +30,7 @@ async def get_fund(message: Message):
         
         text = f"""
 <b>Фонд
-Кавуневої Республіки
+Кавуневої Республіки</b>
         """ 
         
         for line in fund: 
@@ -40,7 +40,6 @@ async def get_fund(message: Message):
 #️⃣ <code>{line[0]}:{int(line[1])}</code>
 👤 <a href='t.me/{str(user_tag[3]).split('@')[1]}'>{user_tag[0]} {user_tag[1]}</a>
 💰 <b>{line[2]} чорних злотих</b>
-</b>
 """
             have_access = '🏵️ <b>Мають доступ: </b>'
             for user in json.loads(line[4]):

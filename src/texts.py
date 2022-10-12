@@ -160,7 +160,7 @@ VOTING_WAS_STARTED = """🗳️ Розпочалися чергові вибор
 
 FINAL_RES = """🗳️ Результати чергових виборів
 
-👤 <a href=t.me/{username}>{name} {surname}</a>
+👤 <a href="t.me/{username}">{name} {surname}</a>
 ✉️ Кількість голосів: {votes}"""
 
 CANDIDAT_PROFILE = """👤 <a href="t.me/{username}">{name} {surname}</a>

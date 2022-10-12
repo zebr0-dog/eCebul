@@ -33,7 +33,8 @@ async def get_id(message: Message, state: FSMContext):
                 "тег",
                 "баланс",
                 "інфо",
-                "робота"
+                "робота",
+                "емодзі"
             )
             data = await state.get_data()
             changing_column = data.get("column", "")

@@ -49,7 +49,7 @@ async def delete_manager(message: Message):
         
 async def withdraw_money(message: Message):
     cmd, fund_id, amount, *all = message.text.split()
-    fund_id = fund_id[0]
+    fund_id = fund_id.split(":")[0]
     res = await db.withdraw_fund_money(fund_id, amount)
     if res:
         if res[0] == 0:
@@ -68,10 +68,10 @@ async def withdraw_money(message: Message):
                 
 async def take_money(message: Message):
     cmd, fund_id, amount, *all = message.text.split()
-    fund_id = fund_id[0]
-    user_admin_rank = await check_admin_rank(message.from_user.id)
+    fund_id = fund_id.split(":")[0]
+    #user_admin_rank = await check_admin_rank(message.from_user.id)
     fund = await db.get_fund_by_id(fund_id=fund_id)
-    if int(message.from_user.id) in json.loads(fund[0][4]):
+    if int(message.from_user.id) in json.loads(fund[0][4]) or (user_admin_rank := await check_admin_rank(message.from_user.id)):
         res = await db.take_fund_money(fund_id, amount, message.from_user.id)
         if res:
             if res[0] == 0:

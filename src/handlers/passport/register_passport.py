@@ -1,5 +1,5 @@
 from aiogram.types import Message, ReplyKeyboardRemove
-from aiogram.utils.exceptions import CantInitiateConversation
+from aiogram.utils.exceptions import CantInitiateConversation, CantTalkWithBots
 from aiogram.dispatcher import FSMContext
 
 import texts
@@ -144,7 +144,7 @@ async def registration_logname(message: Message, state: FSMContext):
         id = data.get("id")
         try:
             await bot.send_message(id, texts.PASSPORT_WAS_GIVEN)
-        except CantInitiateConversation:
+        except (CantInitiateConversation, CantTalkWithBots):
             pass
         await db.save_passport(data=data)
     await message.answer(

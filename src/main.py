@@ -64,6 +64,11 @@ if __name__ == "__main__":
         commands_prefix="!"
     )
     dp.register_message_handler(
+        handlers.navigation.navig,
+        commands="навігатор",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
         handlers.shop.view_shop.shop_view,
         commands="магазин",
         commands_prefix="!"
@@ -348,7 +353,8 @@ if __name__ == "__main__":
             "тег",
             "баланс",
             "інфо",
-            "робота"
+            "робота",
+            "емодзі"
         ],
         state=states.ChangePasspost.column_pass
     )
