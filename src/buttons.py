@@ -12,6 +12,7 @@ party_select = CallbackData("sel", "act")
 party = CallbackData("par", "act")
 candidates_cb = CallbackData("can", "id")
 vote_cb = CallbackData("vote", "id")
+marriage_cb = CallbackData("marr", "id1", "id2")
 
 start_menu = ReplyKeyboardMarkup(
     keyboard=[
@@ -259,4 +260,13 @@ def vote(id: int):
     id = str(id)
     keyb = InlineKeyboardMarkup()
     keyb.add(InlineKeyboardButton("Проголосувати", callback_data=vote_cb.new(id=id)))
+    return keyb
+
+def marriage_buttons(id1, id2):
+    id1, id2 = str(id1), str(id2)
+    keyb = InlineKeyboardMarkup(row_width=2)
+    keyb.add(
+        InlineKeyboardButton("Прийняти", callback_data=marriage_cb.new(id1, id2)),
+        InlineKeyboardButton("Відхилити", callback_data=marriage_cb.new("0", id2))
+    )
     return keyb

@@ -7,7 +7,12 @@ import texts
 async def show_pass(message: Message):
     passport = await db.get_passport(id=message.from_user.id)
     if passport:
-        name, surname, sex, tag, job, balance, info, emoji, *serv = passport
+        name, surname, sex, tag, job, balance, info, emoji, partner, *serv = passport
+        if partner != 0:
+            _partner_profile = await db.get_passport(partner)
+            partner = " ".join([_partner_profile[0], _partner_profile[1]])
+        else:
+            partner = "Холостяк"
         await message.answer(texts.PASSPORT.format(
             name=name,
             surname=surname,
@@ -16,7 +21,8 @@ async def show_pass(message: Message):
             job=job,
             info=info,
             id=message.from_user.id,
-            emoji=emoji
+            emoji=emoji,
+            partner=partner
         ),
         disable_web_page_preview=True
         )
@@ -29,7 +35,12 @@ async def show_pass_admin(message: Message):
     if passport is None:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
     else:
-        name, surname, sex, tag, job, balance, info, emoji, *a = passport
+        name, surname, sex, tag, job, balance, info, emoji, partner, *serv = passport
+        if partner != 0:
+            _partner_profile = await db.get_passport(partner)
+            partner = " ".join([_partner_profile[0], _partner_profile[1]])
+        else:
+            partner = "Холостяк"
         await message.answer(texts.PASSPORT.format(
             name=name,
             surname=surname,
@@ -38,7 +49,8 @@ async def show_pass_admin(message: Message):
             job=job,
             info=info,
             id=message.reply_to_message.from_user.id,
-            emoji=emoji
+            emoji=emoji,
+            partner=partner
         ),
         disable_web_page_preview=True
         )
@@ -49,7 +61,12 @@ async def find_pass_admin(message: Message):
     if passport is None:  
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
     else:
-        name, surname, user_id, sex, job, balance, info, emoji, *a = passport
+        name, surname, user_id, sex, job, balance, info, emoji, partner, *serv = passport
+        if partner != 0:
+            _partner_profile = await db.get_passport(partner)
+            partner = " ".join([_partner_profile[0], _partner_profile[1]])
+        else:
+            partner = "Холостяк"
         await message.answer(texts.PASSPORT.format(
             name=name,
             surname=surname,
@@ -58,7 +75,8 @@ async def find_pass_admin(message: Message):
             job=job,
             info=info,
             id=user_id,
-            emoji=emoji
+            emoji=emoji,
+            partner=partner
         ),
         disable_web_page_preview=True
         )

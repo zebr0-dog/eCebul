@@ -23,7 +23,7 @@ if __name__ == "__main__":
     import custom_filters
     import states
     from db import create_table
-    from buttons import party, party_select, captcha_cb, candidates_cb, vote_cb
+    from buttons import party, party_select, captcha_cb, candidates_cb, vote_cb, marriage_cb
 
     # bound filter
 
@@ -68,16 +68,16 @@ if __name__ == "__main__":
         commands="навігатор",
         commands_prefix="!"
     )
-    dp.register_message_handler(
-        handlers.shop.view_shop.shop_view,
-        commands="магазин",
-        commands_prefix="!"
-    )
-    dp.register_message_handler(
-        handlers.shop.view_item.my_items,
-        commands="предмети",
-        commands_prefix="!"
-    )
+    # dp.register_message_handler(
+    #     handlers.shop.view_shop.shop_view,
+    #     commands="магазин",
+    #     commands_prefix="!"
+    # )
+    # dp.register_message_handler(
+    #     handlers.shop.view_item.my_items,
+    #     commands="предмети",
+    #     commands_prefix="!"
+    # )
     dp.register_message_handler(
         handlers.vote.candidates.candidats,
         level_of_right=3,
@@ -200,9 +200,29 @@ if __name__ == "__main__":
         party.filter(act="delete"),
         chat_type="private",
     )
-    dp.register_callback_query_handler(
-        handlers.shop.callbacks.shopes
+    dp.register_message_handler(
+        handlers.marriage.marry.marriage_proposal,
+        is_reply=True,
+        commands="шлюб",
+        commands_prefix="!",
     )
+    dp.register_message_handler(
+        handlers.marriage.divorce.divorce_process,
+        is_reply=True,
+        commands="розлучення",
+        commands_prefix="!",
+    )
+    dp.register_callback_query_handler(
+        handlers.marriage.marry.marriage_declined,
+        marriage_cb.filter(id1="0")
+    )
+    dp.register_callback_query_handler(
+        handlers.marriage.marry.marriage_accepted,
+        marriage_cb.filter()
+    )
+    # dp.register_callback_query_handler(
+    #     handlers.shop.callbacks.shopes
+    # )
     # adm
     dp.register_message_handler(
         handlers.passport.show_passports.show_pass_admin,

@@ -1,13 +1,8 @@
-from hashlib import new
 from typing import Dict, Union
-from xmlrpc.client import Boolean
 import aiosqlite
 import operator
 from functools import wraps
 from json import dumps, loads
-from pickletools import read_bytes1
-from sqlite3 import connect
-from types import new_class
 
 def connection(fn):
     @wraps(fn)
@@ -32,7 +27,8 @@ async def create_table(*arg, connect: aiosqlite.Connection):
             balance int,
             info text,
             job text,
-            emoji text DEFAULT '👤'
+            emoji text DEFAULT '👤',
+            partner int
         )
     """)
     await connect.execute("""
@@ -119,8 +115,8 @@ async def save_passport(data: dict, connect):
     await connect.execute("""
         INSERT INTO CIJA (
             user_id, name, surname, sex,
-            username, balance, info, job
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            username, balance, info, job, partner
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
     """, tuple(data.values()))
     return 0
 
@@ -145,12 +141,12 @@ async def get_passport(id: int, connect: aiosqlite.Connection) -> tuple:
     async with connect.execute("""
         SELECT
             name, surname, sex, username,
-            job, balance, info, emoji
+            job, balance, info, emoji, partner
         FROM CIJA WHERE user_id=?
     """, (id,)) as cursor:
         if (passport := (await cursor.fetchone())):
-            name, surname, sex, username, job, balance, info, emoji = passport
-            return name, surname, sex, username, job, balance, info, emoji
+            name, surname, sex, username, job, balance, info, emoji, partner = passport
+            return name, surname, sex, username, job, balance, info, emoji, partner
         else:
             return None
 
@@ -813,9 +809,44 @@ async def buy_item(connect, id_item:int, id_buyer:int, name:str, desc:str, statu
         INSERT INTO BOUGHT_ITEM (owner_item_id, item_id) VALUES (?, ?, ?, ?, ?)
     """, (id_buyer, id_item, name, desc, status))
     
+@connection
 async def bought(connect, id_b:int):
         async with connect.execute("""
         SELECT item_name, description, status FROM ITEM WHERE owner_item_id = ? ORDER BY item DESC
     """, (id,)) as cursor:
             if (res := (await cursor.fetchall())):
                 return res
+
+@connection
+async def marry(id1, id2, connect):
+    id1, id2 = int(id1), int(id2)
+    profile1 = await get_passport(id1)
+    profile2 = await get_passport(id2)
+    if profile1 and profile2:
+        if profile1[2] != profile2[2]:
+            if (profile1[8] == 0) and (profile2[8] == 0):
+                await connect.executemany("""
+                    UPDATE CIJA SET partner=(?) WHERE user_id=(?)
+                """, 
+                (
+                    (id2, id1),
+                    (id1, id2)
+                )
+                )
+                return 0
+            else:
+                return 1
+        else:
+            return 2
+    else:
+        return 3
+
+@connection
+async def divorce(id1, id2, connect):
+    profile1 = await get_passport(id1)
+    profile2 = await get_passport(id2)
+    if profile1[8] == id2 and profile2[8] == id1:
+        await connect.executemany("UPDATE CIJA SET partner=0 WHERE user_id=(?)", ((id1,), (id2,),))
+        return 0
+    else:
+        return 1
