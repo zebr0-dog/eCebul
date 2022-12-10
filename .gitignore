@@ -11,3 +11,4 @@ lib/
 lib64
 
 *__pycache__*
+src/handlers/shop/buy_item.py
