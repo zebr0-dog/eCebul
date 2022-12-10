@@ -1,19 +1,27 @@
 import logging
 import os
 import dotenv
+import asyncio
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+from db import DataBase
 
 # init logging, bot and dispatcher. Load env vars
 
 dotenv.load_dotenv()
-TOKEN = os.getenv("TOKEN")
-MAIN_CHAT = int(os.getenv("MAIN_CHAT"))
-LOG_CHANNEL = int(os.getenv("LOGS"))
+TOKEN = os.getenv("TOKEN", "")
+MAIN_CHAT = int(os.getenv("MAIN_CHAT", 0))
+LOG_CHANNEL = int(os.getenv("LOGS", 0))
+
+if any((not TOKEN, not MAIN_CHAT, not LOG_CHANNEL)):
+    raise ValueError("You wasn't set env vars, look at .env-example")
+
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML, disable_web_page_preview=True)
+bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML, disable_web_page_preview=True)  # type: ignore
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=MemoryStorage())
+DB = DataBase()
 
 if __name__ == "__main__":
     
@@ -22,18 +30,22 @@ if __name__ == "__main__":
     import handlers
     import custom_filters
     import states
-    from db import create_table
-    from buttons import party, party_select, captcha_cb, candidates_cb, vote_cb, marriage_cb
+    import variables
+    from buttons import party, party_select, captcha_cb, candidates_cb, vote_cb, marriage_cb, permission_cb
 
     # bound filter
 
-    dp.filters_factory.bind(custom_filters.isPassportExist)
-    dp.filters_factory.bind(custom_filters.levelOfRight)
+    dp.filters_factory.bind(custom_filters.PassportExist)
+    dp.filters_factory.bind(custom_filters.CheckPermissions)
+    dp.filters_factory.bind(custom_filters.CentraBankPersonal)
     
     # registration of handlers
     
+    dp.register_errors_handler(
+        handlers.error_logger.error_notify
+    )
     dp.register_message_handler(
-        handlers.passport.register_passport.cancel_giving,
+        handlers.moderation.cancel_giving,
         commands="скасувати",
         commands_prefix="!",
         state="*",
@@ -41,18 +53,14 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.passport.show_passports.show_pass,
-        is_passport_exist=True,
-        commands="start",
-        chat_type="private"
-    )
-    dp.register_message_handler(
-        handlers.passport.register_passport.start,
+        passport_exist=True,
         commands="start",
         chat_type="private"
     )
     dp.register_message_handler(
         handlers.passport.register_passport.registration_msg,
-        text="Звичайно!"
+        commands="start",
+        chat_type="private"
     )
     dp.register_message_handler(
         handlers.passport.register_passport.registration,
@@ -78,12 +86,6 @@ if __name__ == "__main__":
     #     commands="предмети",
     #     commands_prefix="!"
     # )
-    dp.register_message_handler(
-        handlers.vote.candidates.candidats,
-        level_of_right=3,
-        commands=["slaves", "кандидати"],
-        commands_prefix="!"
-    )
     dp.register_message_handler(
         handlers.party.show_partyies.show_partyies,
         commands="партії",
@@ -119,21 +121,21 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.vote.reg_candidate.start_reg,
-        is_passport_exist=True,
+        passport_exist=True,
         chat_type="private",
         commands="балотуватись",
         commands_prefix="!",
     )
     dp.register_message_handler(
         handlers.vote.reg_candidate.get_program,
-        is_passport_exist=True,
+        passport_exist=True,
         chat_type="private",
         state=states.RegCandidate.program
     )
     dp.register_message_handler(
-        handlers.vote.voting.list_of_candidats,
-        is_passport_exist=True,
-        chat_type="private",
+        handlers.vote.voting.list_of_candidates,
+        passport_exist=True,
+        chat_type="private", 
         commands="голосувати",
         commands_prefix="!",
     )
@@ -181,7 +183,7 @@ if __name__ == "__main__":
         chat_type="private",
     )
     dp.register_callback_query_handler(
-        handlers.vote.voting.get_candidat_info,
+        handlers.vote.voting.get_candidate_info,
         candidates_cb.filter(),
         chat_type="private",
     )
@@ -223,18 +225,19 @@ if __name__ == "__main__":
     # dp.register_callback_query_handler(
     #     handlers.shop.callbacks.shopes
     # )
+
     # adm
     dp.register_message_handler(
         handlers.passport.show_passports.show_pass_admin,
         is_reply=True,
-        level_of_right=1,
+        need_permission="can_mute",
         commands=["документи", "док"],
         commands_prefix="!"
     )
     dp.register_message_handler(
         handlers.fund.create_fund.create_fund,
         chat_type="private",
-        level_of_right=3,
+        need_permission="can_manage_money",
         commands="створити_фонд",
         commands_prefix="!"
     )
@@ -274,24 +277,23 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.fund.delete_fund.delete_fund,
-        level_of_right=3,
+        need_permission="can_manage_money",
         commands="видалити_фонд",
         commands_prefix="!",
         chat_type="private"
     )
     dp.register_message_handler(
         handlers.fund.fund_managment.withdraw_money,
-        level_of_right=3,
-        commands="списати",
-        commands_prefix="!",
-        chat_type="private"
-    )
-    dp.register_message_handler(
-        handlers.fund.fund_managment.take_money,
         commands="зняти",
         commands_prefix="!",
         chat_type="private"
     )
+    # dp.register_message_handler(
+    #     handlers.fund.fund_managment.t,
+    #     commands="зняти",
+    #     commands_prefix="!",
+    #     chat_type="private"
+    # )
     dp.register_message_handler(
         handlers.fund.fund_managment.replenish_fund,
         commands="поповнити",
@@ -300,21 +302,21 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.passport.show_passports.find_pass_admin,
-        level_of_right=1,
+        need_permission="can_mute",
         commands="знайти",
         commands_prefix="!"
     )
     dp.register_message_handler(
         handlers.passport.register_passport.give,
-        level_of_right=3,
+        need_permission="can_give_passports",
         commands="видати",
         commands_prefix="!",
         state=None,
         chat_type="private"
     )
     dp.register_message_handler(
-        handlers.passport.register_passport.citiezinship_was_cancelled,
-        level_of_right=3,
+        handlers.passport.register_passport.application_was_cancelled,
+        need_permission="can_give_passports",
         commands="відмова",
         commands_prefix="!",
         state=None,
@@ -353,12 +355,8 @@ if __name__ == "__main__":
         state=states.GivePassport.job_pass
     )
     dp.register_message_handler(
-        handlers.passport.register_passport.registration_logname,
-        state=states.GivePassport.create_pass_log
-    )
-    dp.register_message_handler(
         handlers.passport.edit_passport.change_help,
-        level_of_right=3,
+        need_permission="can_give_passports",
         commands="змінити",
         commands_prefix="!",
         chat_type="private",
@@ -366,16 +364,7 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.passport.edit_passport.change_start,
-        text=[
-            "ім'я",
-            "прізвище",
-            "стать",
-            "тег",
-            "баланс",
-            "інфо",
-            "робота",
-            "емодзі"
-        ],
+        text=variables.ALLOWED_CHANGES,
         state=states.ChangePasspost.column_pass
     )
     dp.register_message_handler(
@@ -388,7 +377,7 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.passport.delete_passport.delete_passport_start,
-        level_of_right=3,
+        need_permission="can_give_passports",
         commands="видалити",
         commands_prefix="!"
     )
@@ -399,20 +388,20 @@ if __name__ == "__main__":
     dp.register_message_handler(
         handlers.moderation.unmute,
         is_reply=True,
-        level_of_right=1,
+        need_permission="can_mute",
         commands="розмут",
         commands_prefix='!'
     )
     dp.register_message_handler(
         handlers.moderation.ban,
         is_reply=True,
-        level_of_right=2,
+        need_permission="can_ban",
         commands="бан",
         commands_prefix='!'
     )
     dp.register_message_handler(
         handlers.moderation.unban,
-        level_of_right=2,
+        need_permission="can_ban",
         is_reply=True,
         commands="розбан",
         commands_prefix='!'
@@ -420,20 +409,20 @@ if __name__ == "__main__":
     dp.register_message_handler(
         handlers.moderation.set_admin,
         is_reply=True,
-        level_of_right=5,
+        need_permission="can_promote",
         commands="назначити",
         commands_prefix="!",
     )
     dp.register_message_handler(
         handlers.moderation.mute,
         is_reply=True,
-        level_of_right=1,
+        need_permission="can_mute",
         commands=["мут", "mute"],
         commands_prefix='!'
     )
     dp.register_message_handler(
         handlers.party.create_party.create_party_start,
-        level_of_right=3,
+        need_permission="can_manage_partyies",
         commands="зареєструвати",
         commands_prefix="!",
         chat_type="private",
@@ -456,29 +445,97 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.vote.admins.start_reg_candidats,
-        is_passport_exist=True,
-        level_of_right=4,
+        passport_exist=True,
+        need_permission="can_give_passports",
         chat_type="private",
         commands="реєстрація",
         commands_prefix="!",
     )
     dp.register_message_handler(
         handlers.vote.admins.start_voting,
-        is_passport_exist=True,
-        level_of_right=4,
+        passport_exist=True,
+        need_permission="can_give_passports",
         chat_type="private",
         commands="голосування",
         commands_prefix="!",
     )
     dp.register_message_handler(
         handlers.vote.admins.final_voting,
-        is_passport_exist=True,
-        level_of_right=4,
+        passport_exist=True,
+        need_permission="can_give_passports",
         chat_type="private",
         commands="фінал",
         commands_prefix="!",
     )
+    dp.register_callback_query_handler(
+        handlers.moderation.save,
+        permission_cb.filter(num="9"),
+        need_permission="can_promote",
+    )
+    dp.register_callback_query_handler(
+        handlers.moderation.permissions,
+        permission_cb.filter(),
+        need_permission="can_promote",
+    )
+    dp.register_message_handler(
+        handlers.centrabank.emission.add_money,
+        need_permission="can_manage_money",
+        commands="друк",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.emission.add_money,
+        central_bank_work=True,
+        commands="друк",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.emission.delete_money,
+        need_permission="can_manage_money",
+        commands="знищення",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.emission.delete_money,
+        central_bank_work=True,
+        commands="знищення",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.personal.add_personal,
+        central_bank_work=True,
+        commands="найняти",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.personal.delete_personal,
+        central_bank_work=True,
+        commands="звільнити",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.personal.change_head,
+        central_bank_work=True,
+        commands="переназначити_голову",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.personal.change_head,
+        need_permission="can_manage_money",
+        commands="переназначити_голову",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.emission.give_from_cb,
+        need_permission="can_manage_money",
+        commands="видати_гроші",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.centrabank.emission.give_from_cb,
+        central_bank_work=True,
+        commands="видати_гроші",
+        commands_prefix="!"
+    )
 
-
-
-    executor.start_polling(dp, skip_updates=True, on_startup=create_table)
+    executor.start_polling(dp, skip_updates=True, on_shutdown=DB.close, on_startup=DB.init_tables)

@@ -1,1 +1,1 @@
-from . import reg_candidate, admins, voting, candidates
+from . import reg_candidate, admins, voting

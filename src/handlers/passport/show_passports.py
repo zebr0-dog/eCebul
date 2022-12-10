@@ -1,82 +1,84 @@
 from pyexpat.errors import messages
 from aiogram.types import Message
 
-import db
 import texts
+import variables
+
+from main import DB
 
 async def show_pass(message: Message):
-    passport = await db.get_passport(id=message.from_user.id)
+    passport = await DB.get_passport(id=message.from_user.id)
     if passport:
-        name, surname, sex, tag, job, balance, info, emoji, partner, *serv = passport
-        if partner != 0:
-            _partner_profile = await db.get_passport(partner)
-            partner = " ".join([_partner_profile[0], _partner_profile[1]])
+        if passport.partner != 0:
+            partner_passport = await DB.get_passport(passport.partner)
+            if partner_passport:
+                partner = " ".join([partner_passport.name, partner_passport.surname])
+            else:
+                partner = "Вдовець"
         else:
             partner = "Холостяк"
         await message.answer(texts.PASSPORT.format(
-            name=name,
-            surname=surname,
-            sex=sex,
-            username=tag[1::],
-            job=job,
-            info=info,
-            id=message.from_user.id,
-            emoji=emoji,
+            name=passport.name,
+            surname=passport.surname,
+            sex=variables.SEX[passport.sex],
+            username=passport.username[1::],
+            job=variables.JOBS_REVERSED[passport.job],
+            info=variables.STATUSES_REVERSED[passport.status],
+            id=passport.id,
+            emoji=passport.emoji,
             partner=partner
-        ),
-        disable_web_page_preview=True
-        )
+        ))
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
 
 async def show_pass_admin(message: Message):
     target_id = message.reply_to_message.from_user.id
-    passport = await db.get_passport(target_id)
-    if passport is None:
-        await message.answer(texts.PASSPORT_DO_NOT_EXIST)
-    else:
-        name, surname, sex, tag, job, balance, info, emoji, partner, *serv = passport
-        if partner != 0:
-            _partner_profile = await db.get_passport(partner)
-            partner = " ".join([_partner_profile[0], _partner_profile[1]])
+    passport = await DB.get_passport(id=target_id)
+    if passport:
+        if passport.partner != 0:
+            partner_passport = await DB.get_passport(passport.partner)
+            if partner_passport:
+                partner = " ".join([partner_passport.name, partner_passport.surname])
+            else:
+                partner = "Вдовець"
         else:
             partner = "Холостяк"
         await message.answer(texts.PASSPORT.format(
-            name=name,
-            surname=surname,
-            sex=sex,
-            username=tag[1::],
-            job=job,
-            info=info,
-            id=message.reply_to_message.from_user.id,
-            emoji=emoji,
+            name=passport.name,
+            surname=passport.surname,
+            sex=variables.SEX[passport.sex],
+            username=passport.username[1::],
+            job=variables.JOBS_REVERSED[passport.job],
+            info=variables.STATUSES_REVERSED[passport.status],
+            id=passport.id,
+            emoji=passport.emoji,
             partner=partner
-        ),
-        disable_web_page_preview=True
-        )
+        ))
+    else:
+        await message.answer(texts.PASSPORT_DO_NOT_EXIST)
 
 async def find_pass_admin(message: Message):
     target_username = '@' + str(message.text).split('@')[1]
-    passport = await db.get_passport_from_username(target_username)
-    if passport is None:  
-        await message.answer(texts.PASSPORT_DO_NOT_EXIST)
-    else:
-        name, surname, user_id, sex, job, balance, info, emoji, partner, *serv = passport
-        if partner != 0:
-            _partner_profile = await db.get_passport(partner)
-            partner = " ".join([_partner_profile[0], _partner_profile[1]])
+    passport = await DB.get_passport(username=target_username)
+    if passport:
+        if passport.partner != 0:
+            partner_passport = await DB.get_passport(passport.partner)
+            if partner_passport:
+                partner = " ".join([partner_passport.name, partner_passport.surname])
+            else:
+                partner = "Вдовець"
         else:
             partner = "Холостяк"
         await message.answer(texts.PASSPORT.format(
-            name=name,
-            surname=surname,
-            sex=sex,
-            username=target_username,
-            job=job,
-            info=info,
-            id=user_id,
-            emoji=emoji,
+            name=passport.name,
+            surname=passport.surname,
+            sex=variables.SEX[passport.sex],
+            username=passport.username[1::],
+            job=variables.JOBS_REVERSED[passport.job],
+            info=variables.STATUSES_REVERSED[passport.status],
+            id=passport.id,
+            emoji=passport.emoji,
             partner=partner
-        ),
-        disable_web_page_preview=True
-        )
+        ))
+    else:
+        await message.answer(texts.PASSPORT_DO_NOT_EXIST)

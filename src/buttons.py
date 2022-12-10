@@ -1,11 +1,15 @@
+from typing import Dict
 from aiogram.types import (
     ReplyKeyboardMarkup,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     KeyboardButton
 )
-
 from aiogram.utils.callback_data import CallbackData
+
+import variables
+
+from models import Candidate
 
 captcha_cb = CallbackData("cap", "answer")
 party_select = CallbackData("sel", "act")
@@ -13,113 +17,50 @@ party = CallbackData("par", "act")
 candidates_cb = CallbackData("can", "id")
 vote_cb = CallbackData("vote", "id")
 marriage_cb = CallbackData("marr", "id1", "id2")
+permission_cb = CallbackData("perm", "id", "num", "active")
 
-start_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="Звичайно!")
+def sex_keyboard():
+    sex_menu = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Чоловік")
+            ],
+            [
+                KeyboardButton(text="Жінка")
+            ],
+            
         ],
-        
-    ],
-    resize_keyboard=True
-)
+        resize_keyboard=True
+    )
+    return sex_menu
 
-sex_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="Чоловік")
+def citizenship_keyboard():
+    citizenship_menu = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Громадянин")
+            ],
+            [
+                KeyboardButton(text="Негромадянин")
+            ],
         ],
-        [
-            KeyboardButton(text="Жінка")
-        ],
-        
-    ],
-    resize_keyboard=True
-)  
+        resize_keyboard=True
+    )
+    return citizenship_menu
 
-complete = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="Затвердити!")
-        ],
-        
-    ],
-    resize_keyboard=True
-)
+def job_keyboard():
+    job_kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    for job in variables.JOBS.keys():
+        job_kb.add(KeyboardButton(text=job))
+    return job_kb
 
-balance_reg = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="0")
-        ],
-        
-    ],
-    resize_keyboard=True
-)  
-
-job_reg = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="Безробітній")
-        ],
-        [
-            KeyboardButton(text='Президент')
-        ],
-        [
-            KeyboardButton(text='Спікер')
-        ], 
-        [
-            KeyboardButton(text='Віце-Спікер')
-        ], 
-        [
-            KeyboardButton(text='Чатовий')
-        ], 
-        [
-            KeyboardButton(text='Жандарм')
-        ], 
-        [
-            KeyboardButton(text='Депутат')
-        ], 
-        [
-            KeyboardButton(text='Міністр Внутрішніх Справ')
-        ],
-        [
-            KeyboardButton(text='Міністр Оборони')
-        ],
-        [
-            KeyboardButton(text='Міністр Економіки')
-        ],
-        [
-            KeyboardButton(text='Верховний Суддя')
-        ],
-        [
-            KeyboardButton(text='Помічник Судді')
-        ],
-        [
-            KeyboardButton(text='Апеляційний Суддя')
-        ]
-    ],
-    resize_keyboard=True
-)
-
-change_info = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="❌ Відсторонений, не має впливу на Державу")
-        ],
-        [
-            KeyboardButton(text="🪆 Новачок, тільки приєднався до Держави!")
-        ],
-        [
-            KeyboardButton(text="🎗️ Середняк, розуміє головні Державні аспекти!")
-        ],
-        [
-            KeyboardButton(text="🎖️ Ветеран, знається на Державі")
-        ],
-        
-    ],
-    resize_keyboard=True
-)
+def status_keyboard():
+    status_kb = ReplyKeyboardMarkup(
+        resize_keyboard=True
+    )
+    for status in variables.STATUSES.keys():
+        status_kb.add(status)
+    return status_kb
 
 def dicise_party(owner: int):
     dis = InlineKeyboardMarkup(row_width=2)
@@ -152,74 +93,15 @@ def party_manage_keyboard(is_owner: bool):
     else:
         return
 
-def change_kb_gen(lor: int):
-    change_kb = ...
-    if lor == 5:
-        change_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text="ім'я")
-                ],
-                [
-                    KeyboardButton(text="прізвище")
-                ],
-                [
-                    KeyboardButton(text="стать")
-                ],
-                [
-                    KeyboardButton(text="тег")
-                ],
-                [
-                    KeyboardButton(text="баланс")
-                ],
-                [
-                    KeyboardButton(text="інфо")
-                ],
-                [
-                    KeyboardButton(text="робота")
-                ],
-                [
-                    KeyboardButton(text="емодзі")
-                ],
-            ],
-            resize_keyboard=True
-        )
-    elif lor == 4:
-        change_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text="ім'я")
-                ],
-                [
-                    KeyboardButton(text="прізвище")
-                ],
-                [
-                    KeyboardButton(text="стать")
-                ],
-                [
-                    KeyboardButton(text="тег")
-                ],
-                [
-                    KeyboardButton(text="інфо")
-                ],
-                [
-                    KeyboardButton(text="робота")
-                ],
-            [
-                    KeyboardButton(text="емодзі")
-                ],
-            ],
-            resize_keyboard=True
-        )
-    elif lor == 3:
-        change_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text="баланс")
-                ],
-            ],
-            resize_keyboard=True
-        )
+def change_kb_gen():
+    change_kb = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        row_width=1,
+        input_field_placeholder="Оберіть поле для зміни"
+    )
+    for change in variables.ALLOWED_CHANGES:
+        change_kb.add(KeyboardButton(text=change))
     return change_kb
 
 def gen_captcha_keyboard(correct, user_id):
@@ -241,25 +123,22 @@ def gen_captcha_keyboard(correct, user_id):
             )
     return captcha
 
-def candidates_keyboard(candidats: dict):
+def candidates_keyboard(candidates: Dict[int, Candidate]):
     keyb = InlineKeyboardMarkup(row_width=1)
-    for candidat in candidats:
+    for id, candidate in candidates.items():
         keyb.add(InlineKeyboardButton(
-            "".join(
-                [
-                    candidats[candidat]["name"],
-                    " ",
-                    candidats[candidat]["surname"]
-                ]
-            ),
-            callback_data=candidates_cb.new(id=str(candidats[candidat]["id"]))
+            " ".join([
+                    candidate.name,
+                    candidate.surname
+                ]),
+            callback_data=candidates_cb.new(id=str(candidate.id))
         ))
     return keyb
 
 def vote(id: int):
-    id = str(id)
+    str_id = str(id)
     keyb = InlineKeyboardMarkup()
-    keyb.add(InlineKeyboardButton("Проголосувати", callback_data=vote_cb.new(id=id)))
+    keyb.add(InlineKeyboardButton("Проголосувати", callback_data=vote_cb.new(id=str_id)))
     return keyb
 
 def marriage_buttons(id1, id2):
@@ -268,5 +147,32 @@ def marriage_buttons(id1, id2):
     keyb.add(
         InlineKeyboardButton("Прийняти", callback_data=marriage_cb.new(id1, id2)),
         InlineKeyboardButton("Відхилити", callback_data=marriage_cb.new("0", id2))
+    )
+    return keyb
+
+def permission_buttons(id: int, **kwargs):
+    keyb = InlineKeyboardMarkup(row_width=2)
+    indexes = {
+        1: "Мут",
+        2: "Бан",
+        3: "Пін",
+        4: "Партії",
+        5: "Гроші",
+        6: "Паспорти", 
+        7: "Назначати",
+        8: "Глобальні права"
+    }
+    emojies = {
+        0: "❌",
+        1: "✅"
+    }
+    for i in range(1, 9):
+        active = kwargs.get(str(i), 0)
+        text = emojies.get(int(active), "") + indexes.get(i, "Error")
+        keyb.insert(
+            InlineKeyboardButton(text, callback_data=permission_cb.new(id=id, num=i, active=active)),
+        )
+    keyb.add(
+        InlineKeyboardButton("Зберегти", callback_data=permission_cb.new(id=id, num=9, active=0)),
     )
     return keyb

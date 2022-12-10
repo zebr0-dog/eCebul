@@ -1,9 +1,3 @@
-
-HELLO_MESSAGE = """
-<b>Привіт, шановний користувач!</b>
-Я твій Гід у нашій Кібердержаві.
-Попрошу відповісти на декілька питань перед початком, готовий?"""
-
 WELCOME_CHAT_MESSAGE = """
 Вітаємо в {chat}, <a href="tg://user?id={id}">{name}</a>.
 Будь-ласка натисніть {number} кнопку.
@@ -109,10 +103,27 @@ BANK_ACCOUNT = """
 💰 Баланс: {balance} чорних злотих
 """
 
+FUND = """
+🏦: <b>{fund_name}</b>
+#️⃣: <code>{fund_id}:{fund_owner_id}</code>
+👤: <a href='t.me/{owner_username}'>{owner_name} {owner_surname}</a>
+"""
+
+FUND_DETAILED = """
+<b>Фонд Кавуневої Республіки</b>
+
+🏦 <b>{name}</b>
+#️⃣ <code>{id}:{owner}</code>
+👤 <a href='t.me/{username}'>{owner_name} {surname}</a>
+💰 <b>{balance} чорних злотих</b>
+
+🏵️ <b>Мають доступ: </b>
+"""
+
 PARTYIES = {
     1: """
 📄 {name}
-👑 <a href="t.me/{username}">{owner}</a>
+👑 <a href="t.me/{username}">{owner_name} {owner_surname}</a>
 👤 Учасників: {members_count}
 """
 }

@@ -1,31 +1,47 @@
-from aiogram.types import Message
+from typing import Optional
+from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher.filters import BoundFilter
 
-import db
+from main import DB
 
-class isPassportExist(BoundFilter):
-    key = "is_passport_exist"
+class PassportExist(BoundFilter):
+    key = "passport_exist"
+    def __init__(self, passport_exist: bool) -> None:
+        pass
 
-    def __init__(self, is_passport_exist) -> None:
-        self.is_passport_exist = is_passport_exist
     async def check(self, message: Message) -> bool:
-        res = await db.get_passport(message.from_user.id)
+        res = await DB.get_passport(message.from_user.id)
         return bool(res)
 
-class levelOfRight(BoundFilter):
-    key = "level_of_right"
-
-    def __init__(self, level_of_right) -> None:
-        self.level_of_right = level_of_right
+class CheckPermissions(BoundFilter):
+    key = "need_permission"
+    def __init__(self, need_permission) -> None:
+        self.need_permission = need_permission
     
     async def check(self, message: Message) -> bool:
-        data = await db.get_admin(message.from_user.id)
-        if data:
-            max_value = max(data.values())
-            rang = ...
-            if max_value >= 3:
-                rang = max_value
-            elif max_value <= 2:
-                rang = int(data.get(message.chat.id))
-            return {"lor": rang}
+        admin = await DB.get_admin(message.from_user.id)
+        if admin:
+            frick = {
+                "can_mute": admin.can_mute,
+                "can_ban": admin.can_ban,
+                "can_pin": admin.can_pin,
+                "can_give_passports": admin.can_give_passports,
+                "can_manage_money": admin.can_manage_money,
+                "can_manage_partyies": admin.can_manage_partyies,
+                "can_promote": admin.can_promote,
+            }
+            if not hasattr(message, "chat"):
+                result = frick[self.need_permission] and (message.message.chat.id == admin.chat or admin.chat == 0)
+            else:
+                result = frick[self.need_permission] and (message.chat.id == admin.chat or admin.chat == 0)
+            return result
         return False
+    
+class CentraBankPersonal(BoundFilter):
+    key = "central_bank_work"
+    def __init__(self, *a, **k) -> None:
+        pass
+
+    async def check(self, message: Message) -> bool:
+        personal = await DB.get_personal_cb()
+        return message.from_user.id in personal

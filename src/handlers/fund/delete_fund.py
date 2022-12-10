@@ -6,5 +6,5 @@ import db
 
 async def delete_fund(msg: Message):
     cmd, fund_id, *bloat = msg.text.split()
-    await db.delete_fund(fund_id=fund_id)
+    await db.fund.FundDB().delete_fund(fund_id=int(fund_id))
     await msg.answer("Фонд видалено")

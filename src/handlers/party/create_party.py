@@ -1,10 +1,9 @@
 from aiogram.types import Message
 from aiogram.dispatcher import FSMContext
 
-import db
 import texts
 import states
-from main import bot, LOG_CHANNEL
+from main import bot, DB, LOG_CHANNEL
 
 async def reg_party(msg: Message):
     await msg.answer(texts.FORM_PARTION_TEXT)
@@ -37,13 +36,16 @@ async def get_first_tag(msg: Message, state: FSMContext):
 async def get_second_tag(msg: Message, state: FSMContext):
     await state.update_data(id2=msg.text)
     data = await state.get_data()
-    owner_id = int(data.get("id"))
-    await db.save_party(
+    owner_id = int(data.get("id"))  # type: ignore
+    result = await DB.save_party(
         owner_id,
-        data.get("name"),
-        data.get("id1"),
-        data.get("id2")
+        data.get("name"),  # type: ignore
+        data.get("id1"),  # type: ignore
+        data.get("id2")  # type: ignore
     )
-    await msg.answer("Створення партії затверджено. Дякую.")
-    await bot.send_message(owner_id, "Вашу заяву на створення партії було схвалено")
+    if result == 0:
+        await msg.answer("Створення партії затверджено. Дякую.")
+        await bot.send_message(owner_id, "Вашу заяву на створення партії було схвалено")
+    else:
+        await msg.answer("В партії має бути як мінімум 3 учасники")
     await state.finish()

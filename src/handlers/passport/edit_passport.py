@@ -3,12 +3,14 @@ from aiogram.dispatcher import FSMContext
 
 import texts
 import states
-import db
 import buttons
+import variables
 
-async def change_help(message: Message, lor: int):
+from main import DB
+
+async def change_help(message: Message):
     await states.ChangePasspost.column_pass.set()
-    await message.answer(texts.CHANGE_PASSPORT, reply_markup=buttons.change_kb_gen(lor))
+    await message.answer(texts.CHANGE_PASSPORT, reply_markup=buttons.change_kb_gen())
 
 async def change_start(message: Message, state: FSMContext):
     await state.update_data(column=message.text)
@@ -22,9 +24,10 @@ async def change_start(message: Message, state: FSMContext):
 
 async def get_id(message: Message, state: FSMContext):
         target_id = message.text
-        exist_user = await db.check_is_user_exist(target_id)
+        exist_user = await DB.get_passport(id=int(target_id))
         if not exist_user:
             await message.answer(texts.PASSPORT_DO_NOT_EXIST)
+            return
         else:
             allowed_changing = (
                 "ім'я",
@@ -32,7 +35,8 @@ async def get_id(message: Message, state: FSMContext):
                 "стать",
                 "тег",
                 "баланс",
-                "інфо",
+                "статус",
+                "громадянство",
                 "робота",
                 "емодзі"
             )
@@ -41,13 +45,15 @@ async def get_id(message: Message, state: FSMContext):
             if changing_column in allowed_changing:
                 await state.update_data(target=target_id)
                 keyboards = {
-                    "інфо": buttons.change_info,
-                    "робота": buttons.job_reg
+                    "стать": buttons.sex_keyboard,
+                    "статус": buttons.status_keyboard,
+                    "громадянство": buttons.citizenship_keyboard,
+                    "робота": buttons.job_keyboard
                 }
-                keyboard = keyboards.get(changing_column, ReplyKeyboardRemove())
+                keyboard = keyboards.get(changing_column, ReplyKeyboardRemove)
                 await message.answer(
                     "Введіть нові дані або оберіть з клавіатури:",
-                    reply_markup=keyboard
+                    reply_markup=keyboard()  # type: ignore
                 )
                 await states.ChangePasspost.change_data_pass.set()
             else:
@@ -57,20 +63,28 @@ async def get_id(message: Message, state: FSMContext):
 async def get_new_data(message: Message, state: FSMContext):
         new_data = message.text
         data = await state.get_data()
-        target = data.get('target')
+        target = int(data.get('target'))  # type: ignore
         column = data.get("column")
         columns = {
-            "ім'я": "name",
-            "прізвище": "surname",
-            "стать": "sex",
-            "тег": "username",
-            "баланс": "balance",
-            "інфо": "info",
-            "робота": "job",
-            "емодзі": "emoji"
+            "ім'я": {"column": "name", "value": None},
+            "прізвище": {"column": "surname", "value": None},
+            "стать": {"column": "sex", "value": {"Чоловік": 1, "Жінка": 2}},
+            "громадянство": {"column": "citizenship", "value": {"Громадянин": True, "Негромадянин": False}},
+            "тег": {"column": "username", "value": None},
+            "баланс": {"column": "balance", "value": None},
+            "статус": {"column": "status", "value": variables.STATUSES},
+            "робота": {"column": "job", "value": variables.JOBS},
+            "емодзі": {"column": "emoji", "value": None}
         }
         await state.finish()
-        if (await db.update_data(columns[column], target, new_data)) == 0:
-            await message.answer("<b>OK</b>", reply_markup=ReplyKeyboardRemove())
-        else:
-            await message.answer("Помилка. Почніть спочатку.", reply_markup=ReplyKeyboardRemove())
+        current_data = columns.get(column)  # type: ignore
+        if current_data:
+            if current_data["value"]:
+                data = current_data["value"][new_data]
+            else:
+                data = new_data
+            result = await DB.update_passport(column=current_data["column"], id=target, data=data)
+            if not result:
+                await message.answer("Дані оновлено", reply_markup=ReplyKeyboardRemove())
+                return
+        await message.answer("Помилка. Почніть спочатку", reply_markup=ReplyKeyboardRemove())

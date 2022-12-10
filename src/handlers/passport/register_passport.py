@@ -3,37 +3,14 @@ from aiogram.utils.exceptions import CantInitiateConversation, CantTalkWithBots
 from aiogram.dispatcher import FSMContext
 
 import texts
-import db
 import buttons
 import states
-from main import bot, LOG_CHANNEL
-
-async def start(message: Message):
-    await message.answer(
-        text=texts.HELLO_MESSAGE,
-        reply_markup=buttons.start_menu
-    )
-
-async def start_signed_up(message: Message):
-    passport = await db.get_passport(id=message.from_user.id)
-    name, surname, sex, tag, job, balance, info, *serv = passport
-    await message.answer(texts.PASSPORT.format(
-        name=name,
-        surname=surname,
-        sex=sex,
-        id=message.from_user.id,
-        job=job,
-        info=info,
-    ))
+import variables
+from main import bot, LOG_CHANNEL, DB
 
 async def registration_msg(message: Message):
-    if message.chat.id == message.from_user.id:
-        await message.answer(
-            text="<b>Розпочинаємо процедуру реєстрації!</b>",
-            reply_markup=ReplyKeyboardRemove()
-        )
-        await message.answer(text=texts.FORM_TEXT)
-        await states.Register.pass_application.set()
+    await message.answer(text=texts.FORM_TEXT)
+    await states.Register.pass_application.set()
 
 async def registration(message: Message, state: FSMContext):
     username = message.from_user.username
@@ -49,22 +26,14 @@ async def registration(message: Message, state: FSMContext):
         ))
     await message.answer(text="<b>☺️ Успіх! Твої дані надіслано, чекай відповідь!</b>")
 
-async def give(message: Message):
-    await message.answer(text=texts.WARNING_ALERT)
-    await states.GivePassport.id_pass.set()
-    await message.answer(text=texts.FIRST_STEP)
-
-async def citiezinship_was_cancelled(msg: Message):
+async def application_was_cancelled(msg: Message):
     command, target, *b = msg.text.split()
     await bot.send_message(int(target), "Вам відмовлено в громадянстві")
     await msg.answer("OK")
 
-async def cancel_giving(message: Message, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state is None:
-        return
-    await state.finish()
-    await message.reply("Операція скасована", reply_markup=ReplyKeyboardRemove())
+async def give(message: Message):
+    await states.GivePassport.id_pass.set()
+    await message.answer(text=texts.FIRST_STEP)
 
 async def giving_id(message: Message, state: FSMContext):
     await state.update_data(id=message.text)
@@ -83,72 +52,55 @@ async def giving_surname(message: Message, state: FSMContext):
     await states.GivePassport.next()
     await message.answer(
         text=texts.FOURTH_STEP,
-        reply_markup=buttons.sex_menu
+        reply_markup=buttons.sex_keyboard()
     )
 
 async def giving_sex(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['sex'] = message.text
+        data['sex'] = variables.SEX_REVERSED[message.text]
     await states.GivePassport.next()
     await message.answer(
         text=texts.FIVETH_STEP,
         reply_markup=ReplyKeyboardRemove()
-    )
+    ) 
 
 async def giving_username(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['tag'] = message.text
-    await message.answer(text=texts.SIXTH_STEP, reply_markup=buttons.balance_reg)
+    await message.answer(text=texts.SIXTH_STEP)
     await states.GivePassport.next()
 
 async def giving_balance(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['balance'] = message.text
-    await message.answer(
-        text="✅<b> Баланс встановлено!</b>",
-        reply_markup=ReplyKeyboardRemove())
-    await message.answer(
-        text="ℹ️ <b>Додаткова інформація:\n\nНатисніть кнопку</b>",
-        reply_markup=buttons.change_info
-    )
+    await message.answer(text="✅<b> Баланс встановлено!</b>")
+    await message.answer(text="ℹ️ <b>Статус громадянства:\n\nНатисніть кнопку</b>", reply_markup=buttons.status_keyboard())
     await states.GivePassport.next()
 
 async def giving_info(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['info'] = message.text
+        data['info'] = variables.STATUSES[message.text]
     await message.answer(
-        text="<b> Доповнено!</b>",
+        text="<b>OK!</b>",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer(
         text="<b>Інформація про роботу:\n\nНатисніть кнопку</b>",
-        reply_markup=buttons.job_reg
+        reply_markup=buttons.job_keyboard()
     )
     await states.GivePassport.next()
 
 async def giving_job(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['robota'] = message.text
-    await message.answer(
-        text="<b> Документ створено!</b>",
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await message.answer(
-        text="<b> Натисніть кнопку щоб затвердити:</b>",
-        reply_markup=buttons.complete
-    )
-    await states.GivePassport.create_pass_log.set()
-
-async def registration_logname(message: Message, state: FSMContext):
-    async with state.proxy() as data:
-        id = data.get("id")
+        data['job'] = variables.JOBS[message.text]
+        print(data["id"])
         try:
-            await bot.send_message(id, texts.PASSPORT_WAS_GIVEN)
+            await bot.send_message(data["id"], texts.PASSPORT_WAS_GIVEN)
         except (CantInitiateConversation, CantTalkWithBots):
             pass
-        await db.save_passport(data=data)
+        await DB.save_passport(data=data.as_dict())
     await message.answer(
-        text="<b> Видача документа затверджена, дякую!</b>",
+        text="<b> Документ створено!</b>",
         reply_markup=ReplyKeyboardRemove()
     )
     await state.finish()

@@ -1,13 +1,13 @@
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from db import get_all_candidates, get_name
+
+from main import DB
 
 
 async def candidats(message: Message):
-    all_c = await get_all_candidates()
-    if all_c:
+    all_c = await DB.get_all_candidats()
+    if all_c is dict:
         text = "Кандидати на даний момент:\n"
-        for candidate in all_c:
-            candidate = await get_name(id = candidate)
+        for id, candidate in all_c.items():  # type: ignore
             text = text + "<code>" + candidate[0] + " " + candidate[1] + "</code>:" + "\n" + candidate[2] + "\n"
     else:
         text = "Кандидатів немає\n <em>ХТО ЇХ СПЕР???</em>"

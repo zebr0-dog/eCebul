@@ -24,11 +24,11 @@ async def get_fund_name(msg: Message, state: FSMContext):
 async def get_fund_balance(msg: Message, state: FSMContext):
     await state.update_data(fund_balance=msg.text)
     data = await state.get_data()
-    owner_id = int(data.get("fund_owner_id"))
+    owner_id = int(data.get("fund_owner_id"))  # type: ignore
     name = str(data.get("fund_name"))
-    await db.create_fund(
+    await db.fund.FundDB().create_fund(
         owner_id = owner_id,
-        balance = int(float(data.get("fund_balance"))),
+        balance = int(float(data.get("fund_balance"))),  # type: ignore
         name = name
     )
     await msg.answer("Створення фонду завершено. Дякуємо")

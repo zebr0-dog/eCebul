@@ -1,12 +1,12 @@
-from aiogram.types import Message, ChatPermissions, CallbackQuery
+from aiogram.types import Message, ChatPermissions, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup
+from aiogram.dispatcher import FSMContext
 
 import datetime
 import random
 
-from main import bot
+from main import bot, DB
 
 import texts
-import db
 import buttons
 
 async def new_member(message: Message):
@@ -106,13 +106,14 @@ async def unban(message: Message):
     ))
 
 async def set_admin(message: Message):
-    cmd, rang, *all = message.text.split()
-    await db.set_admin(
-        id=message.reply_to_message.from_user.id,
-        rang=rang,
-        chat=message.chat.id
-    )
-    await message.reply(f"Користувач назначений на ранг: {rang}")
+    await message.answer("Оберіть права для користувача", reply_markup=buttons.permission_buttons(message.reply_to_message.from_user.id))
+
+async def cancel_giving(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    await state.finish()
+    await message.reply("Операція скасована", reply_markup=ReplyKeyboardRemove())
 
 async def check(cb: CallbackQuery):
     await cb.answer()
@@ -130,3 +131,50 @@ async def check(cb: CallbackQuery):
                 ChatPermissions(True, True, True, True)
             )
         await cb.message.delete()
+
+async def save(cb: CallbackQuery):
+    await cb.answer()
+    print("aa")
+    data = cb.data.split(":")
+    prefix, id, *bloat = data
+    indexes = {
+        1: "can_mute",
+        2: "can_ban",
+        3: "can_pin",
+        4: "can_manage_partyies",
+        5: "can_manage_money",
+        6: "can_give_passports",
+        7: "can_promote",
+        100: "nothiing"
+    }
+    markup = cb.message.reply_markup["inline_keyboard"]
+    permissions = {}
+    chat = 0
+    for row in markup:
+        for key in row:
+            splited_data = key["callback_data"].split(":")
+            if (index := int(splited_data[2])) == 8:
+                if bool(int(splited_data[3])):
+                    chat = 0
+                else:
+                    chat = cb.message.chat.id
+            else:
+                permissions[indexes.get(int(index), "")] = bool(int(splited_data[3]))
+    await DB.set_admin(id=int(id), chat=chat, **permissions)
+    await cb.message.edit_reply_markup(InlineKeyboardMarkup())
+
+async def permissions(cb: CallbackQuery):
+    await cb.answer()
+    data = cb.data.split(":")
+    prefix, id, number, active = data
+    new_status = int(not bool(int(active)))
+    keyboard = cb.message.reply_markup.inline_keyboard
+    data = {}
+    for row in keyboard:
+        for key in row:
+            splited_data = key["callback_data"].split(":")
+            if splited_data[2] != id:
+                if splited_data[3] == "1":
+                    data[splited_data[2]] = "1"
+    data[number] = new_status
+    await cb.message.edit_reply_markup(buttons.permission_buttons(int(id), **data))
