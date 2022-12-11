@@ -29,7 +29,7 @@ async def show_pass(message: Message):
             emoji=passport.emoji,
             partner=partner,
             birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
-            yearsold=date.today().year - date.fromisoformat(passport.birthdate).year
+            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
         ))
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
