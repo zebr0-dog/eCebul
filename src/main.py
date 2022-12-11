@@ -373,6 +373,7 @@ if __name__ == "__main__":
     )
     dp.register_message_handler(
         handlers.passport.edit_passport.get_new_data,
+        content_types=["photo", "text"],
         state=states.ChangePasspost.change_data_pass
     )
     dp.register_message_handler(

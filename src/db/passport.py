@@ -48,7 +48,8 @@ class PassportDB(DB):
             "status": "UPDATE PASSPORTS SET status=(?) WHERE user_id=(?)",
             "emoji": "UPDATE PASSPORTS SET emoji=(?) WHERE user_id=(?)",
             "citizenship": "UPDATE PASSPORTS SET is_citizen=? WHERE user_id=?",
-            "birthdate": "UPDATE PASSPORTS SET birthdate=? WHERE user_id=?"
+            "birthdate": "UPDATE PASSPORTS SET birthdate=? WHERE user_id=?",
+            "passport_photo": "UPDATE PASSPORTS SET passport_photo=? WHERE user_id=?"
         }
         query = queryies.get(column, "")
         data_for_query = (data, id)

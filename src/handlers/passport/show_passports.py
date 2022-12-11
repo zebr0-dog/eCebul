@@ -18,19 +18,21 @@ async def show_pass(message: Message):
                 partner = "Вдовець"
         else:
             partner = "Холостяк"
-        await message.answer(texts.PASSPORT.format(
-            name=passport.name,
-            surname=passport.surname,
-            sex=variables.SEX[passport.sex],
-            username=passport.username[1::],
-            job=variables.JOBS_REVERSED[passport.job],
-            info=variables.STATUSES_REVERSED[passport.status],
-            id=passport.id,
-            emoji=passport.emoji,
-            partner=partner,
-            birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
-            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
-        ))
+        text = texts.PASSPORT.format(
+                name=passport.name,
+                surname=passport.surname,
+                sex=variables.SEX[passport.sex],
+                username=passport.username[1::],
+                job=variables.JOBS_REVERSED[passport.job],
+                info=variables.STATUSES_REVERSED[passport.status],
+                id=passport.id,
+                emoji=passport.emoji,
+                partner=partner,
+                birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
+                yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
+                )
+        if passport.passport_photo not in ["", None, "None"]: await message.answer_photo(photo=passport.passport_photo, caption=text)
+        else: await message.answer(text)
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
 
