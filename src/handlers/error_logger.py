@@ -20,7 +20,7 @@ async def error_notify(update: Update, exception):
         tag = "error"
         id=1
         chat = 1
-    await bot.send_message(652289955, f"Помилка, {exception}\n\nЮзер: @{tag}")
+    #await bot.send_message(652289955, "Йди нахуй")
     state = dp.current_state(chat=chat, user=id)
     await state.finish()
     
