@@ -11,8 +11,9 @@ class PassportDB(DB):
         await self.connection.execute("""
             INSERT INTO PASSPORTS (
                 user_id, name, surname, sex,
-                username, balance, status, job
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                username, birthdate, balance, status,
+                job
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, tuple(data.values()))
         await self.commit()
         return 0
@@ -25,11 +26,11 @@ class PassportDB(DB):
         """Get user profile and return one as tuple"""
         async with self.connection.execute("""
             SELECT
-                user_id, name, surname, sex,
-                username, balance, status, job,
-                emoji, partner, is_citizen, passport_photo
-            FROM PASSPORTS WHERE user_id=? OR username=?
-        """, (id, username,)) as cursor:
+                user_id, name, surname, sex, username,
+                balance, status, job, emoji,
+                partner, is_citizen, passport_photo,
+                birthdate
+            FROM PASSPORTS WHERE user_id=? OR username=?""", (id, username,)) as cursor:
             if (passport := (await cursor.fetchone())):
                 passport_as_class = Passport(*passport)
                 return passport_as_class
@@ -46,7 +47,8 @@ class PassportDB(DB):
             "balance": "UPDATE PASSPORTS SET balance=(?) WHERE user_id=(?)",
             "status": "UPDATE PASSPORTS SET status=(?) WHERE user_id=(?)",
             "emoji": "UPDATE PASSPORTS SET emoji=(?) WHERE user_id=(?)",
-            "citizenship": "UPDATE PASSPORTS SET is_citizen=? WHERE user_id=?"
+            "citizenship": "UPDATE PASSPORTS SET is_citizen=? WHERE user_id=?",
+            "birthdate": "UPDATE PASSPORTS SET birthdate=? WHERE user_id=?"
         }
         query = queryies.get(column, "")
         data_for_query = (data, id)

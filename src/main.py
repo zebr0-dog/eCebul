@@ -537,5 +537,9 @@ if __name__ == "__main__":
         commands="видати_гроші",
         commands_prefix="!"
     )
+    dp.register_message_handler(
+        handlers.passport.register_passport.giving_birthdate,
+        state=states.GivePassport.birthdate_pass
+    )
 
     executor.start_polling(dp, skip_updates=True, on_shutdown=DB.close, on_startup=DB.init_tables)

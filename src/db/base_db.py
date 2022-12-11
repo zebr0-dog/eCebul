@@ -21,15 +21,16 @@ class DB:
                 balance int,
                 status int,
                 job int,
-                emoji text DEFAULT '',
+                emoji text DEFAULT '👤',
                 partner int DEFAULT 0,
                 is_citizen bool,
-                passport_photo text
+                passport_photo text,
+                birthdate text
             )
         """)
         await self.connection.execute("""
             CREATE TABLE IF NOT EXISTS ADMINS (
-                id int,
+                user_id int,
                 chat_id int,
                 can_mute bool,
                 can_ban bool,

@@ -38,7 +38,8 @@ async def get_id(message: Message, state: FSMContext):
                 "статус",
                 "громадянство",
                 "робота",
-                "емодзі"
+                "емодзі",
+                "дата_народження"
             )
             data = await state.get_data()
             changing_column = data.get("column", "")
@@ -74,10 +75,12 @@ async def get_new_data(message: Message, state: FSMContext):
             "баланс": {"column": "balance", "value": None},
             "статус": {"column": "status", "value": variables.STATUSES},
             "робота": {"column": "job", "value": variables.JOBS},
-            "емодзі": {"column": "emoji", "value": None}
+            "емодзі": {"column": "emoji", "value": None},
+            "дата_народження": {"column": "birthdate", "value": None}
         }
         await state.finish()
         current_data = columns.get(column)  # type: ignore
+        
         if current_data:
             if current_data["value"]:
                 data = current_data["value"][new_data]
@@ -85,6 +88,6 @@ async def get_new_data(message: Message, state: FSMContext):
                 data = new_data
             result = await DB.update_passport(column=current_data["column"], id=target, data=data)
             if not result:
-                await message.answer("Дані оновлено", reply_markup=ReplyKeyboardRemove())
+                await message.answer(f"Дані оновлено", reply_markup=ReplyKeyboardRemove())
                 return
-        await message.answer("Помилка. Почніть спочатку", reply_markup=ReplyKeyboardRemove())
+        await message.answer(f"Помилка. Почніть спочатку", reply_markup=ReplyKeyboardRemove())

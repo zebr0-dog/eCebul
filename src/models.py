@@ -15,6 +15,7 @@ class Passport:
     partner: int
     is_citizen: bool
     passport_photo: str
+    birthdate: str
 
 @dataclass
 class Fund:

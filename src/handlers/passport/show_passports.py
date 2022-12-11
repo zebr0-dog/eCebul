@@ -1,5 +1,6 @@
 from pyexpat.errors import messages
 from aiogram.types import Message
+from datetime import date
 
 import texts
 import variables
@@ -26,7 +27,9 @@ async def show_pass(message: Message):
             info=variables.STATUSES_REVERSED[passport.status],
             id=passport.id,
             emoji=passport.emoji,
-            partner=partner
+            partner=partner,
+            birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
+            yearsold=date.today().year - date.fromisoformat(passport.birthdate).year
         ))
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
@@ -52,7 +55,9 @@ async def show_pass_admin(message: Message):
             info=variables.STATUSES_REVERSED[passport.status],
             id=passport.id,
             emoji=passport.emoji,
-            partner=partner
+            partner=partner,
+            birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
+            yearsold=int(date.today.strftime("%Y"))-int(date.fromisoformat(passport.birthdate).strftime("%Y"))
         ))
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
@@ -78,7 +83,9 @@ async def find_pass_admin(message: Message):
             info=variables.STATUSES_REVERSED[passport.status],
             id=passport.id,
             emoji=passport.emoji,
-            partner=partner
+            partner=partner,
+            birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
+            yearsold=int(date.today.strftime("%Y"))-int(date.fromisoformat(passport.birthdate).strftime("%Y"))
         ))
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)

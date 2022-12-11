@@ -8,6 +8,7 @@ class GivePassport(StatesGroup):
     name_pass = State()
     surname_pass = State()
     sex_pass = State()
+    birthdate_pass = State()
     username_pass = State()
     balance_pass = State()
     info_pass = State()
