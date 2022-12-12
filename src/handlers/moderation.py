@@ -134,7 +134,6 @@ async def check(cb: CallbackQuery):
 
 async def save(cb: CallbackQuery):
     await cb.answer()
-    print("aa")
     data = cb.data.split(":")
     prefix, id, *bloat = data
     indexes = {
@@ -145,6 +144,7 @@ async def save(cb: CallbackQuery):
         5: "can_manage_money",
         6: "can_give_passports",
         7: "can_promote",
+        8: "can_give_diplomas",
         100: "nothiing"
     }
     markup = cb.message.reply_markup["inline_keyboard"]
@@ -153,7 +153,7 @@ async def save(cb: CallbackQuery):
     for row in markup:
         for key in row:
             splited_data = key["callback_data"].split(":")
-            if (index := int(splited_data[2])) == 8:
+            if (index := int(splited_data[2])) == 10:
                 if bool(int(splited_data[3])):
                     chat = 0
                 else:

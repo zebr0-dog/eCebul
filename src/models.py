@@ -18,6 +18,15 @@ class Passport:
     birthdate: str
 
 @dataclass
+class Diploma:
+    user_id: int
+    name: str
+    surname: str
+    qualification: str
+    date: str
+    rector: str
+
+@dataclass
 class Fund:
     id: int
     owner: int
@@ -64,6 +73,7 @@ class Admin:
     can_manage_partyies: bool
     can_give_passports: bool
     can_promote: bool
+    can_give_diplomas: bool
 
 class StatusOfVoting(Enum):
     NO_VOTING = 1

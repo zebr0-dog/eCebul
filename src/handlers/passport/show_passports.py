@@ -12,25 +12,22 @@ async def show_pass(message: Message):
     if passport:
         if passport.partner != 0:
             partner_passport = await DB.get_passport(passport.partner)
-            if partner_passport:
-                partner = " ".join([partner_passport.name, partner_passport.surname])
-            else:
-                partner = "Вдовець"
-        else:
-            partner = "Холостяк"
+            if partner_passport: partner = " ".join([partner_passport.name, partner_passport.surname])
+            else: partner = "Вдовець"
+        else: partner = "Холостяк"
         text = texts.PASSPORT.format(
-                name=passport.name,
-                surname=passport.surname,
-                sex=variables.SEX[passport.sex],
-                username=passport.username[1::],
-                job=variables.JOBS_REVERSED[passport.job],
-                info=variables.STATUSES_REVERSED[passport.status],
-                id=passport.id,
-                emoji=passport.emoji,
-                partner=partner,
-                birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
-                yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
-                )
+            name=passport.name,
+            surname=passport.surname,
+            sex=variables.SEX[passport.sex],
+            username=passport.username[1::],
+            job=variables.JOBS_REVERSED[passport.job],
+            info=variables.STATUSES_REVERSED[passport.status],
+            id=passport.id,
+            emoji=passport.emoji,
+            partner=partner,
+            birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
+            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
+        )
         if passport.passport_photo not in ["", None, "None"]: await message.answer_photo(photo=passport.passport_photo, caption=text)
         else: await message.answer(text)
     else:
@@ -42,13 +39,10 @@ async def show_pass_admin(message: Message):
     if passport:
         if passport.partner != 0:
             partner_passport = await DB.get_passport(passport.partner)
-            if partner_passport:
-                partner = " ".join([partner_passport.name, partner_passport.surname])
-            else:
-                partner = "Вдовець"
-        else:
-            partner = "Холостяк"
-        await message.answer(texts.PASSPORT.format(
+            if partner_passport: partner = " ".join([partner_passport.name, partner_passport.surname])
+            else: partner = "Вдовець"
+        else: partner = "Холостяк"
+        text = texts.PASSPORT.format(
             name=passport.name,
             surname=passport.surname,
             sex=variables.SEX[passport.sex],
@@ -59,8 +53,10 @@ async def show_pass_admin(message: Message):
             emoji=passport.emoji,
             partner=partner,
             birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
-            yearsold=int(date.today.strftime("%Y"))-int(date.fromisoformat(passport.birthdate).strftime("%Y"))
-        ))
+            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
+        )
+        if passport.passport_photo not in ["", None, "None"]: await message.answer_photo(photo=passport.passport_photo, caption=text)
+        else: await message.answer(text)
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)
 
@@ -70,13 +66,10 @@ async def find_pass_admin(message: Message):
     if passport:
         if passport.partner != 0:
             partner_passport = await DB.get_passport(passport.partner)
-            if partner_passport:
-                partner = " ".join([partner_passport.name, partner_passport.surname])
-            else:
-                partner = "Вдовець"
-        else:
-            partner = "Холостяк"
-        await message.answer(texts.PASSPORT.format(
+            if partner_passport: partner = " ".join([partner_passport.name, partner_passport.surname])
+            else: partner = "Вдовець"
+        else: partner = "Холостяк"
+        text = texts.PASSPORT.format(
             name=passport.name,
             surname=passport.surname,
             sex=variables.SEX[passport.sex],
@@ -87,7 +80,9 @@ async def find_pass_admin(message: Message):
             emoji=passport.emoji,
             partner=partner,
             birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
-            yearsold=int(date.today.strftime("%Y"))-int(date.fromisoformat(passport.birthdate).strftime("%Y"))
-        ))
+            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
+        )
+        if passport.passport_photo not in ["", None, "None"]: await message.answer_photo(photo=passport.passport_photo, caption=text)
+        else: await message.answer(text)
     else:
         await message.answer(texts.PASSPORT_DO_NOT_EXIST)

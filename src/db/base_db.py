@@ -38,7 +38,8 @@ class DB:
                 can_manage_money bool,
                 can_manage_partyies bool,
                 can_give_passports bool,
-                can_promote bool
+                can_promote bool,
+                can_give_diplomas bool
             )
         """)
         await self.connection.execute("""
@@ -127,6 +128,16 @@ class DB:
                 item_name text NOT NULL,
                 description text NOT NULL,
                 status text
+            )
+        """)
+        await self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS PASSPORTS (
+                user_id int,
+                name text,
+                surname text,
+                qualification text,
+                rector text,
+                date text
             )
         """)
         return 0

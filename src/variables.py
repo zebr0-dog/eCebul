@@ -55,6 +55,14 @@ ALLOWED_CHANGES = [
     "фото_паспорту"
 ]
 
+ALLOWED_DIPLOMA_CHANGES = [
+    "ім'я",
+    "призвище",
+    "спеціальність",
+    "ректор",
+    "дата"
+]
+
 OPERATORS = {
     "+": operator.add,
     "-": operator.sub,

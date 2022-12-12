@@ -94,12 +94,39 @@ PASSPORT = """
 🆔 <code>К{id}Р</code>
 🚻 {sex}
 📅 {birthdate}, {yearsold} років
+📌 
 💼 {job}
 🌐 <a href="t.me/{username}">Ідентифікатор</a>
 
 💍 {partner}
 
 {info}
+"""
+
+DIP_PASSPORT = """
+<b>ДИПЛОМАТИЧНИЙ ПАСПОРТ КАВУНЕВОЇ РЕСПУБЛІКИ
+DIPLOMATIC PASSPORT OF KAVUNIAN REPUBLIC
+PASSEPORT DIPLOMATIQUE DE LA KAVUN REPUBLIQUE<b/>
+
+{emoji} {name} {surname}
+🆔 <code>К{id}Р</code>
+🚻 {sex}     📅 {birthdate}     💼 {job}
+🌐 <a href="t.me/{username}">Ідентифікатор</a>
+
+💍 {partner}
+
+{info}
+"""
+
+DIPLOMA = """
+<b>ДИПЛОМ {education_level}<b/>
+
+Ім'я: {name}
+Призвище: {surname}
+Спеціальність: {qualification}
+
+Видано: {rector}
+Дата видачи: {date}
 """
 
 BANK_ACCOUNT = """

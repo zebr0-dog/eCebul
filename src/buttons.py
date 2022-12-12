@@ -151,7 +151,7 @@ def marriage_buttons(id1, id2):
     return keyb
 
 def permission_buttons(id: int, **kwargs):
-    keyb = InlineKeyboardMarkup(row_width=2)
+    keyb = InlineKeyboardMarkup(row_width=3)
     indexes = {
         1: "Мут",
         2: "Бан",
@@ -160,19 +160,20 @@ def permission_buttons(id: int, **kwargs):
         5: "Гроші",
         6: "Паспорти", 
         7: "Назначати",
-        8: "Глобальні права"
+        8: "Глобальні права",
+        9: "Діпломи"
     }
     emojies = {
         0: "❌",
         1: "✅"
     }
-    for i in range(1, 9):
+    for i in range(1, 10):
         active = kwargs.get(str(i), 0)
         text = emojies.get(int(active), "") + indexes.get(i, "Error")
         keyb.insert(
             InlineKeyboardButton(text, callback_data=permission_cb.new(id=id, num=i, active=active)),
         )
     keyb.add(
-        InlineKeyboardButton("Зберегти", callback_data=permission_cb.new(id=id, num=9, active=0)),
+        InlineKeyboardButton("Зберегти", callback_data=permission_cb.new(id=id, num=10, active=0)),
     )
     return keyb
