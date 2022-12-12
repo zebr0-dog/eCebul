@@ -10,24 +10,23 @@ class DiplomaDB(DB):
         """Save profile of user into db"""
         await self.connection.execute("""
             INSERT INTO DIPLOMAS (
-                user_id, name, surname, qualification,
-                rector, date
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                user_id, student_name, student_surname, academy_name,
+                date_course_start, date_course_end, average_grade
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
         """, tuple(data.values()))
         await self.commit()
         return 0
   
     async def get_diploma(
         self,
-        id: int=0,
-        username: str="",
+        user_id: int=0,
     ) -> Optional[Diploma]:
         """Get user profile and return one as tuple"""
         async with self.connection.execute("""
             SELECT
-                user_id, name, surname, qualification,
-                rector, date
-            FROM DIPLOMAS WHERE user_id=?""", (id, username,)) as cursor:
+                user_id, student_name, student_surname, academy_name,
+                date_course_start, date_course_end, average_grade
+            FROM DIPLOMAS WHERE user_id=?""", (user_id,)) as cursor:
             if (diploma := (await cursor.fetchone())):
                 diploma_class = Diploma(*diploma)
                 return diploma_class
@@ -36,11 +35,12 @@ class DiplomaDB(DB):
     
     async def update_diploma(self, column: str, id: int, data: Union[str, int]):
         queryies ={
-            "name": "UPDATE DIPLOMAS SET name=(?) WHERE user_id=(?)",
-            "surname": "UPDATE DIPLOMAS SET surname=(?) WHERE user_id=(?)",
-            "qualification": "UPDATE DIPLOMAS SET qualification=? WHERE user_id=?",
-            "rector": "UPDATE DIPLOMAS SET rector=? WHERE user_id=?",
-            "date": "UPDATE DIPLOMAS SET date=? WHERE user_id=?"
+            "student_name": "UPDATE DIPLOMAS SET name=(?) WHERE user_id=(?)",
+            "student_surname": "UPDATE DIPLOMAS SET surname=(?) WHERE user_id=(?)",
+            "academy_name": "UPDATE DIPLOMAS SET academy_name=? WHERE user_id=?",
+            "date_course_start": "UPDATE DIPLOMAS SET date_course_start=? WHERE user_id=?",
+            "date_course_end": "UPDATE DIPLOMAS SET date_course_end=? WHERE user_id=?",
+            "average_grade": "UPDATE DIPLOMAS SET average_grade=? WHERE user_id=?"
         }
         data_for_query = (data, id)
         if query:

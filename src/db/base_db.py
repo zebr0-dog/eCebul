@@ -131,13 +131,14 @@ class DB:
             )
         """)
         await self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS PASSPORTS (
+            CREATE TABLE IF NOT EXISTS DIPLOMAS (
                 user_id int,
-                name text,
-                surname text,
-                qualification text,
-                rector text,
-                date text
+                student_name text,
+                student_surname text,
+                academy_name text,
+                date_course_start text,
+                date_course_end text,
+                average_grade int
             )
         """)
         return 0

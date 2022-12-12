@@ -93,14 +93,14 @@ def party_manage_keyboard(is_owner: bool):
     else:
         return
 
-def change_kb_gen():
+def change_kb_gen(allowed_changes=variables.ALLOWED_CHANGES):
     change_kb = ReplyKeyboardMarkup(
         resize_keyboard=True,
         one_time_keyboard=True,
         row_width=1,
         input_field_placeholder="Оберіть поле для зміни"
     )
-    for change in variables.ALLOWED_CHANGES:
+    for change in allowed_changes:
         change_kb.add(KeyboardButton(text=change))
     return change_kb
 

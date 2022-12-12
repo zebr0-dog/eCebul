@@ -20,11 +20,12 @@ class Passport:
 @dataclass
 class Diploma:
     user_id: int
-    name: str
-    surname: str
-    qualification: str
-    date: str
-    rector: str
+    student_name: str
+    student_surname: str
+    academy_name: str
+    date_course_start: str
+    date_course_end: str
+    average_grade: int
 
 @dataclass
 class Fund:

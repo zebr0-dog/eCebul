@@ -106,7 +106,7 @@ PASSPORT = """
 DIP_PASSPORT = """
 <b>ДИПЛОМАТИЧНИЙ ПАСПОРТ КАВУНЕВОЇ РЕСПУБЛІКИ
 DIPLOMATIC PASSPORT OF KAVUNIAN REPUBLIC
-PASSEPORT DIPLOMATIQUE DE LA KAVUN REPUBLIQUE<b/>
+PASSEPORT DIPLOMATIQUE DE LA KAVUN REPUBLIQUE</b>
 
 {emoji} {name} {surname}
 🆔 <code>К{id}Р</code>
@@ -119,14 +119,15 @@ PASSEPORT DIPLOMATIQUE DE LA KAVUN REPUBLIQUE<b/>
 """
 
 DIPLOMA = """
-<b>ДИПЛОМ {education_level}<b/>
+<b>ДИПЛОМ {academy_name}</b>
 
-Ім'я: {name}
-Призвище: {surname}
-Спеціальність: {qualification}
+👤 {student_name} {student_surname}
+🆔 К{user_id}Р
 
-Видано: {rector}
-Дата видачи: {date}
+📅 {date_course_start}
+📅 {date_course_end}
+
+💯 {average_grade}/100
 """
 
 BANK_ACCOUNT = """
@@ -227,3 +228,16 @@ DIVORCE_RESULTS = {
     0: "Шлюб розірвано",
     1: "Ви не є законними партнерами"
 }
+
+DIPLOMA_REGISTRATION_STEPS = {
+    0: "user_id",
+    1: "student name",
+    2: "student surname",
+    3: "academy name",
+    4: "date course start (yyyy-mm-dd)",
+    5: "date course end (yyyy-mm-dd)",
+    6: "average score"
+}
+
+DIPLOMA_DO_NOT_EXISTS = """<b>У вас немає диплому.</b>"""
+DIPLOMA_WAS_GIVEN = """<b>Вітаємо. Вам був видан диплом.</b>"""

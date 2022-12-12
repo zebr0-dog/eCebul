@@ -470,7 +470,7 @@ if __name__ == "__main__":
     )
     dp.register_callback_query_handler(
         handlers.moderation.save,
-        permission_cb.filter(num="9"),
+        permission_cb.filter(num="10"),
         need_permission="can_promote",
     )
     dp.register_callback_query_handler(
@@ -542,5 +542,76 @@ if __name__ == "__main__":
         handlers.passport.register_passport.giving_birthdate,
         state=states.GivePassport.birthdate_pass
     )
-
+    dp.register_message_handler(
+        handlers.diploma.delete_diploma.delete_diploma_start,
+        need_permission="can_give_diplomas",
+        commands="лишити_диплома",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.diploma.delete_diploma.delete_diploma,
+        state=states.DeleteDiploma.delete_diploma
+    )
+    dp.register_message_handler(
+        handlers.diploma.show_diploma.show_diploma,
+        commands="диплом",
+        commands_prefix="!"
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.give,
+        need_permission="can_give_diplomas",
+        commands="видати_диплом",
+        commands_prefix="!",
+        state=None,
+        chat_type="private"
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_user_id,
+        state=states.GiveDiploma.user_id_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_student_name,
+        state=states.GiveDiploma.student_name_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_student_surname,
+        state=states.GiveDiploma.student_surname_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_academy_name,
+        state=states.GiveDiploma.academy_name_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_date_course_start,
+        state=states.GiveDiploma.date_course_start_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_date_course_end,
+        state=states.GiveDiploma.date_course_end_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.register_diploma.giving_average_grade,
+        state=states.GiveDiploma.average_grade_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.edit_diploma.change_help,
+        need_permission="can_give_diplomas",
+        commands="змінити_диплом",
+        commands_prefix="!",
+        chat_type="private",
+        state=None
+    )
+    dp.register_message_handler(
+        handlers.diploma.edit_diploma.change_start,
+        text=variables.ALLOWED_DIPLOMA_CHANGES,
+        state=states.ChangeDiploma.column_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.edit_diploma.get_id,
+        state=states.ChangeDiploma.id_pass
+    )
+    dp.register_message_handler(
+        handlers.diploma.edit_diploma.get_new_data,
+        state=states.ChangeDiploma.change_data_pass
+    )
     executor.start_polling(dp, skip_updates=True, on_shutdown=DB.close, on_startup=DB.init_tables)

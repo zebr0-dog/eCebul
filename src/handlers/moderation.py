@@ -153,7 +153,7 @@ async def save(cb: CallbackQuery):
     for row in markup:
         for key in row:
             splited_data = key["callback_data"].split(":")
-            if (index := int(splited_data[2])) == 10:
+            if (index := int(splited_data[2])) == 9:
                 if bool(int(splited_data[3])):
                     chat = 0
                 else:
