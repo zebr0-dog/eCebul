@@ -7,17 +7,17 @@ from models import Party, Member
 class PartyDB(PassportDB, DB):
     async def get_all(self) -> Optional[List[Party]]:
         async with self.connection.execute("""
-            SELECT * FROM PARTYIES
+            SELECT * FROM PARTIES
         """) as cursor:
-            partyies = []
+            parties = []
             if (res := (await cursor.fetchall())):
                 for row in res:
-                    partyies.append(Party(*row))
-                return partyies
+                    parties.append(Party(*row))
+                return parties
         return None
 
     async def get_party_by_user(self, user_id: int) -> Optional[Party]:
-        party_result = await self.connection.execute("SELECT * FROM PARTYIES WHERE party_id=(SELECT party_id FROM PARTYIES_MEMBERS WHERE member_id=?)", (user_id,))
+        party_result = await self.connection.execute("SELECT * FROM PARTIES WHERE party_id=(SELECT party_id FROM PARTIES_MEMBERS WHERE member_id=?)", (user_id,))
         party_db = await party_result.fetchone()
         if party_db:
             print(party_db[2])
@@ -28,7 +28,7 @@ class PartyDB(PassportDB, DB):
 
     async def get_party_by_id(self, party_id: int) -> Optional[Party]:
             party_db = await self.connection.execute("""
-                SELECT * FROM PARTYIES WHERE party_id=?
+                SELECT * FROM PARTIES WHERE party_id=?
             """, (party_id,))
             party_fetched = await party_db.fetchone()
             if party_fetched:
@@ -40,7 +40,7 @@ class PartyDB(PassportDB, DB):
         if party:
             await self.delete_member(member_id=member_id)
             await self.connection.execute("""
-                INSERT INTO PARTYIES_MEMBERS VALUES (?, ?)
+                INSERT INTO PARTIES_MEMBERS VALUES (?, ?)
             """, (party.id, member_id,))
             await self.commit()
             return 0
@@ -49,7 +49,7 @@ class PartyDB(PassportDB, DB):
 
     async def delete_member(self, member_id: int) -> int:
         await self.connection.execute("""
-            DELETE FROM PARTYIES_MEMBERS WHERE member_id=?
+            DELETE FROM PARTIES_MEMBERS WHERE member_id=?
         """, (member_id,))
         await self.commit()
         return 0
@@ -58,11 +58,11 @@ class PartyDB(PassportDB, DB):
         owner, first, second = int(owner), int(first), int(second)
         if len({owner, first, second}) == 3:
             new_party = await self.connection.execute("""
-                INSERT OR REPLACE INTO PARTYIES (name, owner) VALUES (?, ?)
+                INSERT OR REPLACE INTO PARTIES (name, owner) VALUES (?, ?)
             """, (name, owner))
             party_id = new_party.lastrowid
             await self.connection.executemany("""
-                INSERT OR REPLACE INTO PARTYIES_MEMBERS (party_id, member_id) VALUES (?, ?)
+                INSERT OR REPLACE INTO PARTIES_MEMBERS (party_id, member_id) VALUES (?, ?)
             """, ([
                         (party_id, first),
                         (party_id, second),
@@ -74,15 +74,15 @@ class PartyDB(PassportDB, DB):
             return 1
     
     async def delete_party(self, party_id: int) -> int:
-        await self.connection.execute("DELETE FROM PARTYIES WHERE party_id=?", (party_id,))
-        await self.connection.execute("DELETE FROM PARTYIES_MEMBERS WHERE party_id=?", (party_id,))
+        await self.connection.execute("DELETE FROM PARTIES WHERE party_id=?", (party_id,))
+        await self.connection.execute("DELETE FROM PARTIES_MEMBERS WHERE party_id=?", (party_id,))
         await self.commit()
         return 0
     
     async def get_members(self, party_id: int) -> Optional[List[Member]]:
         party = await self.get_party_by_id(party_id=party_id)
         if party:
-            res = await self.connection.execute("SELECT member_id, can_add_members FROM PARTYIES_MEMBERS WHERE party_id=?", (party_id,))
+            res = await self.connection.execute("SELECT member_id, can_add_members FROM PARTIES_MEMBERS WHERE party_id=?", (party_id,))
             if (members := await res.fetchall()):
                 members_list = []
                 for member in members:

@@ -177,3 +177,17 @@ def permission_buttons(id: int, **kwargs):
         InlineKeyboardButton("Зберегти", callback_data=permission_cb.new(id=id, num=10, active=0)),
     )
     return keyb
+
+def diplomatic_passport_keyboard():
+    diplomatic_passport_menu = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Має")
+            ],
+            [
+                KeyboardButton(text="Немає")
+            ],
+        ],
+        resize_keyboard=True
+    )
+    return diplomatic_passport_menu

@@ -614,4 +614,9 @@ if __name__ == "__main__":
         handlers.diploma.edit_diploma.get_new_data,
         state=states.ChangeDiploma.change_data_pass
     )
+    dp.register_message_handler(
+        handlers.passport.show_passports.show_diplomatic_passport,
+        commands=["диппас", "дип_пас", "дипломатичний_паспорт"],
+        commands_prefix="!"
+    )
     executor.start_polling(dp, skip_updates=True, on_shutdown=DB.close, on_startup=DB.init_tables)

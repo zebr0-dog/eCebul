@@ -29,7 +29,7 @@ class PassportDB(DB):
                 user_id, name, surname, sex, username,
                 balance, status, job, emoji,
                 partner, is_citizen, passport_photo,
-                birthdate
+                birthdate, have_diplomatic_passport
             FROM PASSPORTS WHERE user_id=? OR username=?""", (id, username,)) as cursor:
             if (passport := (await cursor.fetchone())):
                 passport_as_class = Passport(*passport)
@@ -49,7 +49,8 @@ class PassportDB(DB):
             "emoji": "UPDATE PASSPORTS SET emoji=(?) WHERE user_id=(?)",
             "citizenship": "UPDATE PASSPORTS SET is_citizen=? WHERE user_id=?",
             "birthdate": "UPDATE PASSPORTS SET birthdate=? WHERE user_id=?",
-            "passport_photo": "UPDATE PASSPORTS SET passport_photo=? WHERE user_id=?"
+            "passport_photo": "UPDATE PASSPORTS SET passport_photo=? WHERE user_id=?",
+            "have_diplomatic_passport": "UPDATE PASSPORTS SET have_diplomatic_passport=? WHERE user_id=?"
         }
         query = queryies.get(column, "")
         data_for_query = (data, id)
@@ -107,7 +108,7 @@ class PassportDB(DB):
         profile2 = await self.get_passport(id2)
         if profile1 and profile2:
             if profile1.partner == id2 and profile2.partner == id1:
-                await self.connection.executemany("UPDATE CIJA SET partner=0 WHERE user_id=(?)", ((id1,), (id2,),))
+                await self.connection.executemany("UPDATE PASSPORTS SET partner=0 WHERE user_id=(?)", ((id1,), (id2,),))
                 return 0
             else:
                 return 1

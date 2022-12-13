@@ -40,7 +40,8 @@ async def get_id(message: Message, state: FSMContext):
                 "робота",
                 "емодзі",
                 "дата_народження",
-                "фото_паспорту"
+                "фото_паспорту",
+                "дипломатичний_паспорт"
             )
             data = await state.get_data()
             changing_column = data.get("column", "")
@@ -50,7 +51,8 @@ async def get_id(message: Message, state: FSMContext):
                     "стать": buttons.sex_keyboard,
                     "статус": buttons.status_keyboard,
                     "громадянство": buttons.citizenship_keyboard,
-                    "робота": buttons.job_keyboard
+                    "робота": buttons.job_keyboard,
+                    "дипломатичний_паспорт": buttons.diplomatic_passport_keyboard
                 }
                 keyboard = keyboards.get(changing_column, ReplyKeyboardRemove)
                 await message.answer("Введіть нові дані або оберіть з клавіатури:", reply_markup=keyboard()) #type: ignor
@@ -76,7 +78,8 @@ async def get_new_data(message: Message, state: FSMContext):
             "робота": {"column": "job", "value": variables.JOBS},
             "емодзі": {"column": "emoji", "value": None},
             "дата_народження": {"column": "birthdate", "value": None},
-            "фото_паспорту": {"column": "passport_photo", "value": None}
+            "фото_паспорту": {"column": "passport_photo", "value": None},
+            "дипломатичний_паспорт": {"column": "have_diplomatic_passport", "value": {"Має": True, "Немає": False}}
         }
         await state.finish()
         current_data = columns.get(column)  # type: ignore

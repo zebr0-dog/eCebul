@@ -87,8 +87,7 @@ PASSPORT_WAS_GIVEN = """
 </b>"""
 
 PASSPORT = """
-<b>ПАСПОРТ
-{is_citizen_header}А КАВУНЕВОЇ РЕСПУБЛІКИ</b>
+<b>ПАСПОРТ КАВУНЕВОЇ РЕСПУБЛІКИ</b>
 
 {emoji} {name} {surname}
 🆔 <code>К{id}Р</code>
@@ -104,26 +103,22 @@ PASSPORT = """
 {info}
 """
 
-DIP_PASSPORT = """
+DIPLOMATIC_PASSPORT = """
 <b>ДИПЛОМАТИЧНИЙ ПАСПОРТ КАВУНЕВОЇ РЕСПУБЛІКИ
 DIPLOMATIC PASSPORT OF KAVUNIAN REPUBLIC
 PASSEPORT DIPLOMATIQUE DE LA KAVUN REPUBLIQUE</b>
 
 {emoji} {name} {surname}
 🆔 <code>К{id}Р</code>
-🚻 {sex}     📅 {birthdate}     💼 {job}
-🌐 <a href="t.me/{username}">Ідентифікатор</a>
-
-💍 {partner}
-
-{info}
+🚻 {sex}
+📅 {birthdate}, {years_old} років
 """
 
 DIPLOMA = """
 <b>ДИПЛОМ {academy_name}</b>
 
 👤 {student_name} {student_surname}
-🆔 К{user_id}Р
+🆔 <code>К{user_id}Р</code>
 
 📅 {date_course_start}
 📅 {date_course_end}
@@ -164,7 +159,7 @@ PARTYIES = {
 """
 }
 
-PASSPORT_DO_NOT_EXIST = "<b>Помилка. Паспорт не знайдено</b>"
+PASSPORT_DO_NOT_EXIST = "<b>У вас немає паспорту. Будь ласка, звернітися до МВС для отримання паспорту.</b>"
 
 CHANGE_PASSPORT = "<b>Що саме ви хочете змінити?</b>"
 
@@ -240,5 +235,6 @@ DIPLOMA_REGISTRATION_STEPS = {
     6: "Середний бал - "
 }
 
-DIPLOMA_DO_NOT_EXIST = """<b>У вас немає диплому.</b>"""
+DIPLOMA_DO_NOT_EXIST = """<b>У вас немає диплому. Звернітеся до Міністерства Освіти для отримання диплому.</b>"""
 DIPLOMA_WAS_GIVEN = """<b>Вітаємо. Вам був видан диплом.</b>"""
+DIPLOMATIC_PASSPORT_DO_NOT_EXIST = """<b>У вас немає дипломатичного паспорту. Звернітеся до МВС для отримання диппаспорту.</b>"""

@@ -25,7 +25,8 @@ class DB:
                 partner int DEFAULT 0,
                 is_citizen bool,
                 passport_photo text,
-                birthdate text
+                birthdate text,
+                have_diplomatic_passport bool
             )
         """)
         await self.connection.execute("""
@@ -43,14 +44,14 @@ class DB:
             )
         """)
         await self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS PARTYIES (
+            CREATE TABLE IF NOT EXISTS PARTIES (
                 party_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
                 owner INT
             )
         """)
         await self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS PARTYIES_MEMBERS (
+            CREATE TABLE IF NOT EXISTS PARTIES_MEMBERS (
                 party_id int,
                 member_id int,
                 cam_add_members bool

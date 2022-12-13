@@ -16,6 +16,7 @@ class Passport:
     is_citizen: bool
     passport_photo: str
     birthdate: str
+    have_diplomatic_passport: bool
 
 @dataclass
 class Diploma:

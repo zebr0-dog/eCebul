@@ -10,12 +10,12 @@ async def error_notify(update: Update, exception):
         tag = update.callback_query.from_user.username
         id = update.callback_query.from_user.id
         chat = update.callback_query.message.chat.id
-        await update.callback_query.message.reply("Помилка")
+        await update.callback_query.message.reply("يحمي! خطأ فادح.")
     elif "message" in update:
         tag = update.message.from_user.username
         id = update.message.from_user.id
         chat = update.message.chat.id
-        await update.message.reply("Помилка")
+        await update.message.reply("يحمي! خطأ فادح.")
     else:
         tag = "error"
         id=1
