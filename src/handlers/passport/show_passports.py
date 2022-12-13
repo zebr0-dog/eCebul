@@ -15,6 +15,8 @@ async def show_pass(message: Message):
             if partner_passport: partner = " ".join([partner_passport.name, partner_passport.surname])
             else: partner = "Вдовець"
         else: partner = "Холостяк"
+        if passport.is_citizen in ['', None, 'None'] or passport.is_citizen: is_citizen = "Громадянин"
+        else: is_citizen = "Негромадянин"
         text = texts.PASSPORT.format(
             name=passport.name,
             surname=passport.surname,
@@ -26,7 +28,9 @@ async def show_pass(message: Message):
             emoji=passport.emoji,
             partner=partner,
             birthdate=date.fromisoformat(passport.birthdate).strftime("%d.%m.%Y"),
-            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365
+            yearsold=(date.today() - date.fromisoformat(passport.birthdate)).days // 365,
+            is_citizen=is_citizen,
+            is_citizen_header=is_citizen.upper()
         )
         if passport.passport_photo not in ["", None, "None"]: await message.answer_photo(photo=passport.passport_photo, caption=text)
         else: await message.answer(text)
