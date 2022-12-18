@@ -8,6 +8,7 @@ class GivePassport(StatesGroup):
     name_pass = State()
     surname_pass = State()
     sex_pass = State()
+    birthdate_pass = State()
     username_pass = State()
     balance_pass = State()
     info_pass = State()
@@ -62,3 +63,20 @@ class CreateItem(StatesGroup):
     description = State()
     item_cost = State()
     item_status = State()
+
+class DeleteDiploma(StatesGroup):
+    delete_diploma = State()
+
+class GiveDiploma(StatesGroup):
+    user_id_pass = State()
+    student_name_pass = State()
+    student_surname_pass = State()
+    academy_name_pass = State()
+    date_course_start_pass = State()
+    date_course_end_pass = State()
+    average_grade_pass = State()
+
+class ChangeDiploma(StatesGroup):
+    column_pass = State()
+    id_pass = State()
+    change_data_pass = State()

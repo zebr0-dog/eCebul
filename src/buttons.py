@@ -93,14 +93,14 @@ def party_manage_keyboard(is_owner: bool):
     else:
         return
 
-def change_kb_gen():
+def change_kb_gen(allowed_changes=variables.ALLOWED_CHANGES):
     change_kb = ReplyKeyboardMarkup(
         resize_keyboard=True,
         one_time_keyboard=True,
         row_width=1,
         input_field_placeholder="Оберіть поле для зміни"
     )
-    for change in variables.ALLOWED_CHANGES:
+    for change in allowed_changes:
         change_kb.add(KeyboardButton(text=change))
     return change_kb
 
@@ -151,7 +151,7 @@ def marriage_buttons(id1, id2):
     return keyb
 
 def permission_buttons(id: int, **kwargs):
-    keyb = InlineKeyboardMarkup(row_width=2)
+    keyb = InlineKeyboardMarkup(row_width=3)
     indexes = {
         1: "Мут",
         2: "Бан",
@@ -160,19 +160,34 @@ def permission_buttons(id: int, **kwargs):
         5: "Гроші",
         6: "Паспорти", 
         7: "Назначати",
-        8: "Глобальні права"
+        8: "Глобальні права",
+        9: "Діпломи"
     }
     emojies = {
         0: "❌",
         1: "✅"
     }
-    for i in range(1, 9):
+    for i in range(1, 10):
         active = kwargs.get(str(i), 0)
         text = emojies.get(int(active), "") + indexes.get(i, "Error")
         keyb.insert(
             InlineKeyboardButton(text, callback_data=permission_cb.new(id=id, num=i, active=active)),
         )
     keyb.add(
-        InlineKeyboardButton("Зберегти", callback_data=permission_cb.new(id=id, num=9, active=0)),
+        InlineKeyboardButton("Зберегти", callback_data=permission_cb.new(id=id, num=10, active=0)),
     )
     return keyb
+
+def diplomatic_passport_keyboard():
+    diplomatic_passport_menu = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Має")
+            ],
+            [
+                KeyboardButton(text="Немає")
+            ],
+        ],
+        resize_keyboard=True
+    )
+    return diplomatic_passport_menu

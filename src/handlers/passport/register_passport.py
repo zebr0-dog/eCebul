@@ -64,10 +64,16 @@ async def giving_sex(message: Message, state: FSMContext):
         reply_markup=ReplyKeyboardRemove()
     ) 
 
+async def giving_birthdate(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['birthdate'] = message.text
+    await message.answer(text=texts.SIXTH_STEP)
+    await states.GivePassport.next()
+
 async def giving_username(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['tag'] = message.text
-    await message.answer(text=texts.SIXTH_STEP)
+    await message.answer(text=texts.SEVENTH_STEP)
     await states.GivePassport.next()
 
 async def giving_balance(message: Message, state: FSMContext):

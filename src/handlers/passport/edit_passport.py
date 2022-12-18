@@ -38,7 +38,10 @@ async def get_id(message: Message, state: FSMContext):
                 "статус",
                 "громадянство",
                 "робота",
-                "емодзі"
+                "емодзі",
+                "дата_народження",
+                "фото_паспорту",
+                "дипломатичний_паспорт"
             )
             data = await state.get_data()
             changing_column = data.get("column", "")
@@ -48,13 +51,11 @@ async def get_id(message: Message, state: FSMContext):
                     "стать": buttons.sex_keyboard,
                     "статус": buttons.status_keyboard,
                     "громадянство": buttons.citizenship_keyboard,
-                    "робота": buttons.job_keyboard
+                    "робота": buttons.job_keyboard,
+                    "дипломатичний_паспорт": buttons.diplomatic_passport_keyboard
                 }
                 keyboard = keyboards.get(changing_column, ReplyKeyboardRemove)
-                await message.answer(
-                    "Введіть нові дані або оберіть з клавіатури:",
-                    reply_markup=keyboard()  # type: ignore
-                )
+                await message.answer("Введіть нові дані або оберіть з клавіатури:", reply_markup=keyboard()) #type: ignor
                 await states.ChangePasspost.change_data_pass.set()
             else:
                 await state.finish()
@@ -63,6 +64,7 @@ async def get_id(message: Message, state: FSMContext):
 async def get_new_data(message: Message, state: FSMContext):
         new_data = message.text
         data = await state.get_data()
+        #print(message.photo[-1].file_id)
         target = int(data.get('target'))  # type: ignore
         column = data.get("column")
         columns = {
@@ -74,17 +76,19 @@ async def get_new_data(message: Message, state: FSMContext):
             "баланс": {"column": "balance", "value": None},
             "статус": {"column": "status", "value": variables.STATUSES},
             "робота": {"column": "job", "value": variables.JOBS},
-            "емодзі": {"column": "emoji", "value": None}
+            "емодзі": {"column": "emoji", "value": None},
+            "дата_народження": {"column": "birthdate", "value": None},
+            "фото_паспорту": {"column": "passport_photo", "value": None},
+            "дипломатичний_паспорт": {"column": "have_diplomatic_passport", "value": {"Має": True, "Немає": False}}
         }
         await state.finish()
         current_data = columns.get(column)  # type: ignore
         if current_data:
-            if current_data["value"]:
-                data = current_data["value"][new_data]
-            else:
-                data = new_data
+            if current_data["value"]: data = current_data["value"][new_data]
+            else: data = new_data
+            if column == "фото_паспорту": data = message.photo[-1].file_id
             result = await DB.update_passport(column=current_data["column"], id=target, data=data)
             if not result:
-                await message.answer("Дані оновлено", reply_markup=ReplyKeyboardRemove())
+                await message.answer(f"Дані оновлено", reply_markup=ReplyKeyboardRemove())
                 return
-        await message.answer("Помилка. Почніть спочатку", reply_markup=ReplyKeyboardRemove())
+        await message.answer(f"Помилка. Почніть спочатку", reply_markup=ReplyKeyboardRemove())

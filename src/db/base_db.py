@@ -21,15 +21,17 @@ class DB:
                 balance int,
                 status int,
                 job int,
-                emoji text DEFAULT '',
+                emoji text DEFAULT '👤',
                 partner int DEFAULT 0,
                 is_citizen bool,
-                passport_photo text
+                passport_photo text,
+                birthdate text,
+                have_diplomatic_passport bool
             )
         """)
         await self.connection.execute("""
             CREATE TABLE IF NOT EXISTS ADMINS (
-                id int,
+                user_id int,
                 chat_id int,
                 can_mute bool,
                 can_ban bool,
@@ -37,18 +39,19 @@ class DB:
                 can_manage_money bool,
                 can_manage_partyies bool,
                 can_give_passports bool,
-                can_promote bool
+                can_promote bool,
+                can_give_diplomas bool
             )
         """)
         await self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS PARTYIES (
+            CREATE TABLE IF NOT EXISTS PARTIES (
                 party_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
                 owner INT
             )
         """)
         await self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS PARTYIES_MEMBERS (
+            CREATE TABLE IF NOT EXISTS PARTIES_MEMBERS (
                 party_id int,
                 member_id int,
                 cam_add_members bool
@@ -126,6 +129,17 @@ class DB:
                 item_name text NOT NULL,
                 description text NOT NULL,
                 status text
+            )
+        """)
+        await self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS DIPLOMAS (
+                user_id int,
+                student_name text,
+                student_surname text,
+                academy_name text,
+                date_course_start text,
+                date_course_end text,
+                average_grade int
             )
         """)
         return 0

@@ -29,6 +29,7 @@ class CheckPermissions(BoundFilter):
                 "can_manage_money": admin.can_manage_money,
                 "can_manage_partyies": admin.can_manage_partyies,
                 "can_promote": admin.can_promote,
+                "can_give_diplomas": admin.can_give_diplomas
             }
             if not hasattr(message, "chat"):
                 result = frick[self.need_permission] and (message.message.chat.id == admin.chat or admin.chat == 0)
